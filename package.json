@@ -1,0 +1,32 @@
+{
+  "name": "edienilno",
+  "version": "1.0.0",
+  "description": "Oneline IDE based on Microsoft Monaco",
+  "main": "server/index.js",
+  "scripts": {
+    "test": "echo \"No test\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dna2funs/edienilno.git"
+  },
+  "keywords": [
+    "ide",
+    "code",
+    "monaco"
+  ],
+  "author": "Seven Lju",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/dna2funs/edienilno/issues"
+  },
+  "homepage": "https://github.com/dna2funs/edienilno#readme",
+  "dependencies": {
+    "ldapjs": "^1.0.2",
+    "uuid": "^3.3.3",
+    "ws": "^7.2.0"
+  },
+  "devDependencies": {
+    "monaco-editor": "^0.18.1"
+  }
+}

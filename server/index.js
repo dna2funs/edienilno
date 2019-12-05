@@ -8,8 +8,8 @@ const server = i_utils.WebServer.create({ api: i_api });
 i_worker.cronCleanAuthToken();
 i_ws.init(server, '/ws');
 
-const server_port = parseInt(EDIENILNO_PORT || 20202);
-const server_host = EDIENILNO_HOST || '127.0.0.1';
+const server_port = parseInt(process.env.EDIENILNO_PORT || 20202);
+const server_host = process.env.EDIENILNO_HOST || '127.0.0.1';
 
 const instance = server.listen(server_port, server_host, () => {
    console.log(`Edienilno is listening at ${server_host}:${server_port}`);

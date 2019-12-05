@@ -1,6 +1,6 @@
 'use strict';
 
-var codonenv = {
+var system = {
    hostname: window.location.hostname
 };
 
@@ -55,7 +55,7 @@ function get_cookie() {
 }
 
 function set_cookie(key, value) {
-   document.cookie = key + '=' + escape(value) + ';domain=' + codonenv.hostname;
+   document.cookie = key + '=' + escape(value) + ';domain=' + system.hostname;
 }
 
 function erase_cookie(key) {
@@ -95,8 +95,8 @@ function login_and_start(env, before_init, init_app, redirect_url) {
    before_init && before_init();
    var cookie = get_cookie();
    env.user = {
-      username: cookie.codon_username,
-      uuid: cookie.codon_uuid
+      username: cookie.edienilno_username,
+      uuid: cookie.edienilno_uuid
    };
    if (!env.user.username || !env.user.uuid) {
       window.location = redirect_url;

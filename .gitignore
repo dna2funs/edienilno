@@ -63,3 +63,4 @@ typings/
 local
 .DS_Store
 *.swp
+.vscode

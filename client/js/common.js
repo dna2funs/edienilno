@@ -42,6 +42,11 @@ function html(url, done_fn, fail_fn) {
    xhr.send(null);
 }
 
+function wait_for(key, val, fn) {
+   if (key && (val in key)) return fn && fn(key, val);
+   setTimeout(wait_for, 0, key, val, fn);
+}
+
 function get_cookie() {
    var items = document.cookie;
    var r = {};

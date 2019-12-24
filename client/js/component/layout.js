@@ -13,6 +13,8 @@ function EdienilnoSideNavLayout(parent) {
    this.dom.self.style.height = '100%';
    this.dom.self.style.width = '100%';
 
+   this.dom.side.style.backgroundColor = 'white';
+
    this.dom.self.appendChild(this.dom.nav);
    this.dom.self.appendChild(this.dom.side);
    this.dom.self.appendChild(this.dom.view);
@@ -20,8 +22,9 @@ function EdienilnoSideNavLayout(parent) {
 
    this.options = {};
    this.options.navWidth = 60;
-   this.options.sideWidth = 100;
+   this.options.sideWidth = 250;
    this.options.minViewWidth = 360 - 60;
+   this._smallScreen = false;
    this.resize();
 }
 EdienilnoSideNavLayout.prototype = {
@@ -43,6 +46,10 @@ EdienilnoSideNavLayout.prototype = {
       Object.assign(this.options, options);
    },
    _resizeForBroadScreen: function () {
+      this._smallScreen = false;
+      this.dom.nav.style.zIndex = undefined;
+
+      this.dom.side.style.zIndex = undefined;
       this.dom.side.style.position = 'absolute';
       this.dom.side.style.left = this.options.navWidth + 'px';
       this.dom.side.style.top = this.dom.parent.offsetTop + 'px';
@@ -58,6 +65,10 @@ EdienilnoSideNavLayout.prototype = {
       this.dom.view.style.border = '1px solid green';
    },
    _resizeForNarrowScreen: function () {
+      this._smallScreen = true;
+      this.dom.nav.style.zIndex = '1000';
+
+      this.dom.side.style.zIndex = '1001';
       this.dom.side.style.position = 'absolute';
       // this.dom.side.style.display = 'none';
       this.dom.side.style.left = this.options.navWidth + 'px';

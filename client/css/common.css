@@ -3,3 +3,19 @@
    width: 36px;
    margin-top: 8px;
 }
+
+a.edienilno-side-item {
+   text-decoration: none;
+   width: 100%;
+   display: block;
+   padding: 10px;
+}
+
+a.edienilno-side-item:hover {
+   opacity: 0.5;
+}
+
+a.edienilno-side-item:after {
+   content: '>';
+   float: right;
+}

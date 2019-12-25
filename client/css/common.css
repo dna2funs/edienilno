@@ -19,3 +19,28 @@ a.edienilno-side-item:after {
    content: '>';
    float: right;
 }
+
+.edienilno-title-nav-caret {
+   cursor: pointer;
+   display: inline-block;
+   -webkit-appearance: none!important;
+   border-radius: .125rem;
+   border: 1px solid #eeeeee;
+   white-space: nowrap;
+   text-overflow: ellipsis;
+   overflow: hidden;
+   text-align: center;
+   text-transform: uppercase;
+   vertical-align: middle;
+   line-height: 1.5rem;
+   letter-spacing: .12em;
+   font-size: .5rem;
+   font-weight: 500;
+   height: 1.5rem;
+   padding: 0 3px;
+}
+
+.edienilno-title-nav-caret:hover {
+   background-color: #eeeeee;
+   text-decoration: none;
+}

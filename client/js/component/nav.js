@@ -112,7 +112,45 @@ EdienilnoIconNav.prototype = {
 };
 
 function EdienilnoTitleNav(container) {
+   var div = document.createElement('div');
+   var dropdown_caret = document.createElement('a');
+   this.dom = {
+      container: container,
+      self: div,
+      caret: dropdown_caret,
+      menu: new window.edienilno.DropdownView(div)
+   };
+   div.style.overflow = 'hidden';
+   dropdown_caret.innerHTML = '&#8964';
+   dropdown_caret.classList.add('edienilno-title-nav-caret');
+   div.appendChild(dropdown_caret);
+   container.appendChild(div);
+
+   this.dom.menu.dom.self.style.zIndex = '2001';
+   this.dom.menu.dom.self.style.border = '1px solid green';
+
+   var _this = this;
+   this.event = {
+      click: function () {
+         _this.dom.menu.stick();
+         if (_this.dom.menu.isVisible()) {
+            _this.dom.menu.hide();
+         } else {
+            _this.dom.menu.show();
+         }
+      }
+   };
+   dropdown_caret.addEventListener('click', this.event.click);
 }
+EdienilnoTitleNav.prototype = {
+   dispose: function () {
+      this.dom.caret.removeEventListener('click', this.event.click);
+   },
+   resize: function () {
+      this.dom.self.style.width = (this.dom.container.parentNode.offsetWidth - this.dom.container.offsetLeft) + 'px';
+      this.dom.menu.dom.self.style.width = this.dom.self.style.width;
+   }
+};
 
 if (!window.edienilno) window.edienilno = {};
 if (!window.edienilno.nav) window.edienilno.nav = {};

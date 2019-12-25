@@ -84,7 +84,10 @@ function init_ui() {
    ui.dropdown.settings_menu.dom.self.style.width = '200px';
    ui.dropdown.settings_menu.dom.self.style.height = '200px';
    ui.dropdown.settings_menu.dom.self.style.border = '1px solid black';
-   
+
+   ui.titlenav = new edienilno.nav.TitleNav(document.querySelector('#nav_title'));
+   ui.titlenav.dom.menu.dom.self.style.height = '200px';
+
    // var test_item = new edienilno.SideItem('Space', '#');
    // ui.layout.dom.side.appendChild(test_item.dom.self);
 }
@@ -100,6 +103,7 @@ function resize() {
    ui.view.style.height = (window.innerHeight - 60 - 36 /* sub-header */) + 'px';
    ui.layout.resize();
    ui.iconnav.resize();
+   ui.titlenav.resize();
    ui.editor.resize();
 }
 
@@ -122,7 +126,7 @@ function ui_loaded() {
    ui.loading.classList.add('hide');
    ui.app.classList.remove('hide');
    init_ui();
-   controller.switchSideTab('searcher');
+   controller.switchSideTab('editor');
 }
 
 var env = {};

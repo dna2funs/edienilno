@@ -111,9 +111,13 @@ EdienilnoIconNav.prototype = {
    }
 };
 
+function EdienilnoTitleNav(container) {
+}
+
 if (!window.edienilno) window.edienilno = {};
 if (!window.edienilno.nav) window.edienilno.nav = {};
-window.edienilno.nav.EdienilnoIcon = EdienilnoIcon;
-window.edienilno.nav.EdienilnoIconNav = EdienilnoIconNav;
+window.edienilno.nav.Icon = EdienilnoIcon;
+window.edienilno.nav.IconNav = EdienilnoIconNav;
+window.edienilno.nav.TitleNav = EdienilnoTitleNav;
 
 })();

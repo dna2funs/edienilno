@@ -9,7 +9,7 @@ var ui = {
    view: dom('#p_view')
 };
 
-var controller = {
+var _controller = {
    switchSideTab: function (name) {
       Object.keys(ui.side).forEach(function (name) {
          var tab = ui.side[name];
@@ -24,10 +24,10 @@ var controller = {
    }
 };
 
-var event = {
+var _event = {
    nav: {
       switchSideTab: function (_, icon) {
-         controller.switchSideTab(icon.name);
+         _controller.switchSideTab(icon.name);
       },
       showSettingsMenu: function (_, icon) {
          if (ui.dropdown.settings_menu.isVisible()) {
@@ -55,7 +55,7 @@ function init_ui() {
    ui.side.searcher.data = { iconIndex: 2 };
    ui.side.plugins.data = { iconIndex: 3 };
    ui.side.team.dom.view.innerHTML = 'Team';
-   ui.side.editor.dom.view.innerHTML = 'Editor';
+   ui.side.editor.dom.view.innerHTML = 'Editor <div><a class="edienilno-title-nav-caret" style="width:100%;">+</a></div>';
    ui.side.searcher.dom.view.innerHTML = 'Searcher';
    ui.side.plugins.dom.view.innerHTML = 'Plugins';
 
@@ -72,11 +72,11 @@ function init_ui() {
    */
 
    ui.iconnav = new edienilno.nav.IconNav(ui.layout.dom.nav);
-   ui.iconnav.pushTop('team', './images/talk-bubbles-line.svg', event.nav.switchSideTab);
-   ui.iconnav.pushTop('editor', './images/note-line.svg', event.nav.switchSideTab);
-   ui.iconnav.pushTop('searcher', './images/search-line.svg', event.nav.switchSideTab);
-   ui.iconnav.pushTop('plugins', './images/plugin-line.svg', event.nav.switchSideTab);
-   ui.iconnav.pushBottom('settings', './images/cog-line.svg', event.nav.showSettingsMenu);
+   ui.iconnav.pushTop('team', './images/talk-bubbles-line.svg', _event.nav.switchSideTab);
+   ui.iconnav.pushTop('editor', './images/note-line.svg', _event.nav.switchSideTab);
+   ui.iconnav.pushTop('searcher', './images/search-line.svg', _event.nav.switchSideTab);
+   ui.iconnav.pushTop('plugins', './images/plugin-line.svg', _event.nav.switchSideTab);
+   ui.iconnav.pushBottom('settings', './images/cog-line.svg', _event.nav.showSettingsMenu);
    ui.iconnav.dom.topIcons[0].check();
 
    ui.dropdown = {};
@@ -112,8 +112,8 @@ function resize() {
    ui.view.style.width = '100%';
    ui.view.style.height = (window.innerHeight - 60 - 36 /* sub-header */) + 'px';
 
-   if (!controller.resize_list) {
-      controller.resizeList = [
+   if (!_controller.resize_list) {
+      _controller.resizeList = [
          ui.layout,
          ui.iconnav,
          ui.titlenav
@@ -122,7 +122,7 @@ function resize() {
          return x.resize;
       });
    }
-   controller.resizeList.forEach(function (component) {
+   _controller.resizeList.forEach(function (component) {
       component.resize();
    });
 }
@@ -146,7 +146,7 @@ function ui_loaded() {
    ui.loading.classList.add('hide');
    ui.app.classList.remove('hide');
    init_ui();
-   controller.switchSideTab('editor');
+   _controller.switchSideTab('editor');
 }
 
 var env = {};

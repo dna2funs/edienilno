@@ -8,7 +8,7 @@ function EdienilnoSideNavLayout(parent) {
       self: document.createElement('div'),
       nav: document.createElement('div'),
       side: document.createElement('div'),
-      view: document.createElement('div'),
+      view: document.createElement('div')
    };
    this.dom.self.style.height = '100%';
    this.dom.self.style.width = '100%';

@@ -32,13 +32,13 @@ var api = {
    // render for file browser with a specified ID
    render: function (id) {},
    // close an instance
-   close: function (id) {},
+   close: function (id) {}
 };
 
 var plugin = {
    name: 'fileBrowser',
    version: '0.1',
-   _create: function () { return api; },
+   _create: function () { return api; }
 };
 window.edienilno.plugins[plugin.name] = plugin._create();
 

@@ -40,7 +40,7 @@ function edienilnoLoadPlugin(name, path, bundle) {
       } else {
          plugin = {
             name: name,
-            path: path,
+            path: path
          };
          system.plugins[name] = plugin;
          script = document.createElement('script');

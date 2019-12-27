@@ -114,20 +114,24 @@ EdienilnoIconNav.prototype = {
 function EdienilnoTitleNav(container) {
    var div = document.createElement('div');
    var dropdown_caret = document.createElement('a');
+   var title_div = document.createElement('div');
    this.dom = {
       container: container,
       self: div,
       caret: dropdown_caret,
-      menu: new window.edienilno.DropdownView(div)
+      menu: new window.edienilno.DropdownView(div),
+      title: title_div
    };
+   this.dom.menu.dom.self.style.zIndex = '2001';
+   this.dom.menu.dom.self.style.border = '1px solid purple';
    div.style.overflow = 'hidden';
    dropdown_caret.innerHTML = '&#8964';
    dropdown_caret.classList.add('edienilno-title-nav-caret');
+   title_div.style.display = 'inline-block';
+   title_div.style.marginLeft = '5px';
    div.appendChild(dropdown_caret);
+   div.appendChild(title_div);
    container.appendChild(div);
-
-   this.dom.menu.dom.self.style.zIndex = '2001';
-   this.dom.menu.dom.self.style.border = '1px solid green';
 
    var _this = this;
    this.event = {
@@ -141,14 +145,40 @@ function EdienilnoTitleNav(container) {
       }
    };
    dropdown_caret.addEventListener('click', this.event.click);
+
+   var data = {
+      tab: 'untitled',
+      controller: {
+         untitled: {
+            render: function () {
+               _this._emptyTitleContainer();
+               _this.dom.title.innerHTML = '* Untitled';
+            }
+         }
+      }
+   };
+   this.data = data;
 }
 EdienilnoTitleNav.prototype = {
+   _emptyTitleContainer: function () {
+      // detach element nodes
+      while (this.dom.title.children.length) this.dom.title.removeChild(this.dom.title.children[0]);
+      // clear text nodes
+      this.dom.title.innerHTML = '';
+   },
+   switchTab: function (tab_name) {
+      var tab = this.data.controller[tab_name];
+      if (!tab) return;
+      tab.render();
+   },
    dispose: function () {
       this.dom.caret.removeEventListener('click', this.event.click);
    },
    resize: function () {
-      this.dom.self.style.width = (this.dom.container.parentNode.offsetWidth - this.dom.container.offsetLeft) + 'px';
-      this.dom.menu.dom.self.style.width = this.dom.self.style.width;
+      var width = this.dom.container.parentNode.offsetWidth - this.dom.container.offsetLeft;
+      this.dom.self.style.width = width + 'px';
+      this.dom.menu.dom.self.style.width = width + 'px';
+      this.dom.title.style.width = (width - this.dom.caret.offsetWidth - 5) + 'px';
    }
 };
 

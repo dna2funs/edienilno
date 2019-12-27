@@ -59,7 +59,7 @@ function init_ui() {
    ui.side.searcher.dom.view.innerHTML = 'Searcher';
    ui.side.plugins.dom.view.innerHTML = 'Plugins';
 
-   ///*
+   /*
    ui.editor = new EdienilnoEditor(document.createElement('div'));
    ui.editor.self.style.height = '100%';
    ui.editor.self.style.width = '100%';
@@ -69,7 +69,7 @@ function init_ui() {
    ui.editor.on_content_ready(function () {
       ui.editor.resize();
    });
-   //*/
+   */
 
    ui.iconnav = new edienilno.nav.IconNav(ui.layout.dom.nav);
    ui.iconnav.pushTop('team', './images/talk-bubbles-line.svg', event.nav.switchSideTab);
@@ -87,9 +87,19 @@ function init_ui() {
 
    ui.titlenav = new edienilno.nav.TitleNav(document.querySelector('#nav_title'));
    ui.titlenav.dom.menu.dom.self.style.height = '200px';
+   ui.titlenav.switchTab('untitled');
 
    // var test_item = new edienilno.SideItem('Space', '#');
    // ui.layout.dom.side.appendChild(test_item.dom.self);
+
+   window.edienilno.loadPlugin(
+      'fileBrowser',
+      './js/component/plugin/file_browser.js',
+      { test: 1 }
+   ).then(function (plugin) {
+      console.log(plugin);
+   }, function () {
+   });
 }
 
 function before_app() {
@@ -101,10 +111,20 @@ function resize() {
    ui.app.style.height = (window.innerHeight - 60 /* header */) + 'px';
    ui.view.style.width = '100%';
    ui.view.style.height = (window.innerHeight - 60 - 36 /* sub-header */) + 'px';
-   ui.layout.resize();
-   ui.iconnav.resize();
-   ui.titlenav.resize();
-   ui.editor.resize();
+
+   if (!controller.resize_list) {
+      controller.resizeList = [
+         ui.layout,
+         ui.iconnav,
+         ui.titlenav
+         // ui.editor,
+      ].filter(function (x) {
+         return x.resize;
+      });
+   }
+   controller.resizeList.forEach(function (component) {
+      component.resize();
+   });
 }
 
 function register_events() {

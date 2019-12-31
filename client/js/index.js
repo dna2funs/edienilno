@@ -11,21 +11,28 @@ var ui = {
 
 var _controller = {
    switchSideTab: function (name) {
+      var tab = ui.side[name];
+      if (!tab) return;
+      var visible = tab.isVisible();
       Object.keys(ui.side).forEach(function (name) {
          var tab = ui.side[name];
          tab.hide();
          ui.iconnav.dom.topIcons[tab.data.iconIndex].uncheck();
       });
-      var tab = ui.side[name];
-      if (!tab) return;
-      tab.show();
-      tab.resize();
-      ui.iconnav.dom.topIcons[tab.data.iconIndex].check();
+      if (visible) {
+         ui.layout.hideSide();
+      } else {
+         tab.show();
+         ui.layout.showSide();
+         ui.iconnav.dom.topIcons[tab.data.iconIndex].check();
+      }
+      resize();
    }
 };
 
 var _event = {
    nav: {
+      currentTab: null,
       switchSideTab: function (_, icon) {
          _controller.switchSideTab(icon.name);
       },
@@ -71,6 +78,10 @@ function init_ui() {
    });
    */
 
+   ui.controller = {};
+   ui.controller.view = new edienilno.controller.View(ui.layout.dom.view);
+   ui.controller.editorTab = new edienilno.controller.EditorTab(ui.side.editor.dom.view);
+
    ui.iconnav = new edienilno.nav.IconNav(ui.layout.dom.nav);
    ui.iconnav.pushTop('team', './images/talk-bubbles-line.svg', _event.nav.switchSideTab);
    ui.iconnav.pushTop('editor', './images/note-line.svg', _event.nav.switchSideTab);
@@ -80,7 +91,7 @@ function init_ui() {
    ui.iconnav.dom.topIcons[0].check();
 
    ui.dropdown = {};
-   ui.dropdown.settings_menu = new window.edienilno.DropdownView(ui.iconnav.dom.bottomIcons[0].dom);
+   ui.dropdown.settings_menu = new edienilno.DropdownView(ui.iconnav.dom.bottomIcons[0].dom);
    ui.dropdown.settings_menu.dom.self.style.width = '200px';
    ui.dropdown.settings_menu.dom.self.style.height = '200px';
    ui.dropdown.settings_menu.dom.self.style.border = '1px solid black';
@@ -89,17 +100,28 @@ function init_ui() {
    ui.titlenav.dom.menu.dom.self.style.height = '200px';
    ui.titlenav.switchTab('untitled');
 
-   // var test_item = new edienilno.SideItem('Space', '#');
-   // ui.layout.dom.side.appendChild(test_item.dom.self);
+   var test_item = new edienilno.SideItem('#', 'Space', 'This space has no description.');
+   ui.side.editor.dom.self.appendChild(test_item.dom.self);
 
-   window.edienilno.loadPlugin(
+   edienilno.loadPlugin(
       'fileBrowser',
       './js/component/plugin/file_browser.js',
-      { test: 1 }
+      {
+         view: ui.controller.view,
+         editorTab: ui.controller.editorTab
+      }
    ).then(function (plugin) {
       console.log(plugin);
+      var id = plugin.api.create('/test');
+      ui.controller.view.register(id, plugin.api.get(id));
+      ui.controller.view.bind(id);
    }, function () {
    });
+
+   _controller.switchSideTab('editor');
+   if (ui.layout.isNarrowMode()) {
+      _controller.switchSideTab('editor');
+   }
 }
 
 function before_app() {
@@ -115,9 +137,14 @@ function resize() {
    if (!_controller.resize_list) {
       _controller.resizeList = [
          ui.layout,
+         ui.controller.view,
          ui.iconnav,
-         ui.titlenav
+         ui.titlenav,
          // ui.editor,
+         ui.side.team,
+         ui.side.editor,
+         ui.side.searcher,
+         ui.side.plugins
       ].filter(function (x) {
          return x.resize;
       });
@@ -146,7 +173,6 @@ function ui_loaded() {
    ui.loading.classList.add('hide');
    ui.app.classList.remove('hide');
    init_ui();
-   _controller.switchSideTab('editor');
 }
 
 var env = {};

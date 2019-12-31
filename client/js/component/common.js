@@ -8,13 +8,31 @@ function EdienilnoPseudoId(N) {
    return (timestamp + '-') + random;
 }
 
-function EdienilnoSideItem(text, url) {
+function EdienilnoSideItem(url, title, desc) {
    var a = document.createElement('a');
+   var d1 = document.createElement('div');
+   var d2 = document.createElement('div');
    a.classList.add('edienilno-side-item');
-   a.appendChild(document.createTextNode(text));
+   d1.style.fontSize = '20px';
+   d1.style.textOverflow = 'ellipsis';
+   d1.style.whiteSpace = 'nowrap';
+   d1.style.overflow = 'hidden';
+   d2.style.textOverflow = 'ellipsis';
+   d2.style.whiteSpace = 'nowrap';
+   d2.style.overflow = 'hidden';
+   if (title) {
+      d1.appendChild(document.createTextNode(title));
+      a.appendChild(d1);
+   }
+   if (desc) {
+      d2.appendChild(document.createTextNode(desc));
+      a.appendChild(d2);
+   }
    a.href = url;
    this.dom = {
       self: a,
+      title: d1,
+      desc: d2,
       img: document.createElement('img')
    };
 }
@@ -29,6 +47,7 @@ function EdienilnoScrollableView(container) {
    };
    div.appendChild(view);
    container.appendChild(div);
+   this.hide();
    this.resize();
 }
 EdienilnoScrollableView.prototype = {
@@ -48,11 +67,16 @@ EdienilnoScrollableView.prototype = {
    unscrollableY: function () {
       this.dom.self.style.overflowY = 'hidden';
    },
+   isVisible: function () {
+      return this.displayed;
+   },
    show: function () {
       this.dom.self.style.display = 'block';
+      this.displayed = true;
    },
    hide: function () {
       this.dom.self.style.display = 'none';
+      this.displayed = false;
    }
 };
 

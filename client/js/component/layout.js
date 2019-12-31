@@ -24,7 +24,8 @@ function EdienilnoSideNavLayout(parent) {
    this.options.navWidth = 60;
    this.options.sideWidth = 250;
    this.options.minViewWidth = 360 - 60;
-   this._smallScreen = false;
+   this.sideVisible = false;
+   this.narrowMode = false;
    this.resize();
 }
 EdienilnoSideNavLayout.prototype = {
@@ -36,17 +37,33 @@ EdienilnoSideNavLayout.prototype = {
       this.dom.nav.style.height = this.dom.parent.offsetHeight + 'px';
       this.dom.nav.style.border = '1px solid red';
 
-      if (this.dom.parent.offsetWidth - this.options.navWidth - this.options.sideWidth < this.options.minViewWidth) {
+      if (!this.sideVisible) {
+         this.dom.side.style.display = 'none';
+         this._resizeForNarrowScreen();
+      } else if (this.dom.parent.offsetWidth - this.options.navWidth - this.options.sideWidth < this.options.minViewWidth) {
+         this.dom.side.style.display = 'block';
          this._resizeForNarrowScreen();
       } else {
+         this.dom.side.style.display = 'block';
          this._resizeForBroadScreen();
       }
+   },
+   showSide: function () {
+      this.sideVisible = true;
+      this.resize();
+   },
+   hideSide: function () {
+      this.sideVisible = false;
+      this.resize();
    },
    updateOptions: function (options) {
       Object.assign(this.options, options);
    },
+   isNarrowMode: function () {
+      return this.narrowMode;
+   },
    _resizeForBroadScreen: function () {
-      this._smallScreen = false;
+      this.narrowMode = false;
       this.dom.nav.style.zIndex = undefined;
 
       this.dom.side.style.zIndex = undefined;
@@ -65,7 +82,7 @@ EdienilnoSideNavLayout.prototype = {
       this.dom.view.style.border = '1px solid green';
    },
    _resizeForNarrowScreen: function () {
-      this._smallScreen = true;
+      this.narrowMode = true;
       this.dom.nav.style.zIndex = '1000';
 
       this.dom.side.style.zIndex = '1001';

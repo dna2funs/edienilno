@@ -16,8 +16,9 @@ plugin = {
    api: {
       initialize: function (bundle) {},
       create: function (filename) { return id; },
-      render: function (id) {},
-      close: function (id) {}
+      get: function (id) {},
+      ? render: function (id) {},
+      ? close: function (id) {}
    }
 };
 window.edienilno.plugins[name] = plugin._create();

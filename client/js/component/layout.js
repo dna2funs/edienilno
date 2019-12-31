@@ -59,6 +59,9 @@ EdienilnoSideNavLayout.prototype = {
    updateOptions: function (options) {
       Object.assign(this.options, options);
    },
+   isSideVisible: function () {
+      return this.sideVisible;
+   },
    isNarrowMode: function () {
       return this.narrowMode;
    },

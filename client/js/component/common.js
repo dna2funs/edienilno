@@ -28,7 +28,7 @@ function EdienilnoSideItem(url, title, desc) {
       d2.appendChild(document.createTextNode(desc));
       a.appendChild(d2);
    }
-   a.href = url;
+   if (url) a.href = url;
    this.dom = {
       self: a,
       title: d1,

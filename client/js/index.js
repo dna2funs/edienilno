@@ -10,6 +10,7 @@ var ui = {
 };
 
 var _controller = {
+   _cursor: null,
    switchSideTab: function (name) {
       var tab = ui.side[name];
       if (!tab) return;
@@ -20,13 +21,18 @@ var _controller = {
          ui.iconnav.dom.topIcons[tab.data.iconIndex].uncheck();
       });
       if (visible) {
+         _controller._cursor = null;
          ui.layout.hideSide();
       } else {
+         _controller._cursor = name;
          tab.show();
          ui.layout.showSide();
          ui.iconnav.dom.topIcons[tab.data.iconIndex].check();
       }
       resize();
+   },
+   toggleSideTab: function () {
+      _controller.switchSideTab(_controller._cursor);
    }
 };
 
@@ -65,6 +71,11 @@ function init_ui() {
    ui.side.editor.dom.view.innerHTML = 'Editor <div><a class="edienilno-title-nav-caret" style="width:100%;">+</a></div>';
    ui.side.searcher.dom.view.innerHTML = 'Searcher';
    ui.side.plugins.dom.view.innerHTML = 'Plugins';
+   ui.layout.dom.view.addEventListener('mousedown', function () {
+      if (ui.layout.isNarrowMode() && ui.layout.isSideVisible()) {
+         _controller.toggleSideTab();
+      }
+   });
 
    /*
    ui.editor = new EdienilnoEditor(document.createElement('div'));
@@ -81,6 +92,10 @@ function init_ui() {
    ui.controller = {};
    ui.controller.view = new edienilno.controller.View(ui.layout.dom.view);
    ui.controller.editorTab = new edienilno.controller.EditorTab(ui.side.editor.dom.view);
+   ui.controller.editorTab.onTabClick(function (evt, navItem) {
+      var id = navItem.getAttribute('data-id');
+      ui.controller.view.bind(id);
+   });
 
    ui.iconnav = new edienilno.nav.IconNav(ui.layout.dom.nav);
    ui.iconnav.pushTop('team', './images/talk-bubbles-line.svg', _event.nav.switchSideTab);
@@ -100,8 +115,8 @@ function init_ui() {
    ui.titlenav.dom.menu.dom.self.style.height = '200px';
    ui.titlenav.switchTab('untitled');
 
-   var test_item = new edienilno.SideItem('#', 'Space', 'This space has no description.');
-   ui.side.editor.dom.self.appendChild(test_item.dom.self);
+   // var test_item = new edienilno.SideItem('#', 'Space', 'This space has no description but this text is so long.');
+   // ui.controller.editorTab.getDom().appendChild(test_item.dom.self);
 
    edienilno.loadPlugin(
       'fileBrowser',
@@ -113,6 +128,9 @@ function init_ui() {
    ).then(function (plugin) {
       console.log(plugin);
       var id = plugin.api.create('/test');
+      ui.controller.view.register(id, plugin.api.get(id));
+      ui.controller.view.bind(id);
+      id = plugin.api.create('/test2');
       ui.controller.view.register(id, plugin.api.get(id));
       ui.controller.view.bind(id);
    }, function () {

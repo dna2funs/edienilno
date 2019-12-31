@@ -5,6 +5,7 @@
 }
 
 a.edienilno-side-item {
+   cursor: pointer;
    text-decoration: none;
    width: 100%;
    display: block;
@@ -18,6 +19,7 @@ a.edienilno-side-item:hover {
 a.edienilno-side-item:after {
    content: '>';
    float: right;
+   margin-top: -45px;
 }
 
 .edienilno-title-nav-caret {

@@ -10,16 +10,25 @@ function generateId() {
    return timesamp + '-' + rnd;
 }
 
+function basename(filename) {
+   return filename.split('/').pop();
+}
+
 function EdienilnoFileBrowser(id, filename) {
    this.id = id;
    var div = document.createElement('div');
+   var nav = new edienilno.SideItem(null, basename(filename), filename);
    this.dom = {
-      self: div
+      self: div,
+      nav: nav
    };
    this.data = {
       filename: filename,
       filelist: []
    };
+   system.bundle.editorTab.getDom().appendChild(nav.dom.self);
+   nav.dom.self.setAttribute('data-plugin', plugin.name);
+   nav.dom.self.setAttribute('data-id', id);
    div.innerHTML = 'Hello "' + filename + '"!';
    this.hide();
 }
@@ -30,12 +39,16 @@ EdienilnoFileBrowser.prototype = {
          var view = system.bundle.view.getDom();
          view.appendChild(this.dom.self);
       }
+      this.dom.nav.dom.self.style.backgroundColor = '#eeeeee';
       this.dom.self.style.display = 'block';
    },
    hide: function () {
+      this.dom.nav.dom.self.style.backgroundColor = 'white';
       this.dom.self.style.display = 'none';
    },
-   dispose: function () {}
+   dispose: function () {
+      system.bundle.editorTab.getDom().removeChild(this.nav.dom.self);
+   }
 };
 
 var api = {

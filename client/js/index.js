@@ -44,7 +44,7 @@ var _event = {
       },
       connectIfOffline: function (_, icon) {
          if (!_controller.client) return;
-         icon.dom.style.display = 'none';
+         icon.check();
          if (_controller.client.isOnline()) return;
          _controller.client.connect();
       },
@@ -110,7 +110,11 @@ function init_ui() {
    ui.iconnav.pushTop('searcher', './images/search-line.svg', _event.nav.switchSideTab);
    ui.iconnav.pushTop('plugins', './images/plugin-line.svg', _event.nav.switchSideTab);
    ui.iconnav.pushBottom('settings', './images/cog-line.svg', _event.nav.showSettingsMenu);
-   ui.iconnav.pushBottom('settings', './images/wifi-no-line.svg', _event.nav.connectIfOffline);
+   ui.iconnav.pushBottom('settings', './images/wifi-line.svg', _event.nav.connectIfOffline);
+   // for debug only
+   ui.iconnav.pushBottom('settings', './images/wifi-no-line.svg', function () {
+      _controller.client.disconnect();
+   });
    ui.iconnav.dom.topIcons[0].check();
 
    ui.icon = {};
@@ -130,16 +134,14 @@ function init_ui() {
    // var test_item = new edienilno.SideItem('#', 'Space', 'This space has no description but this text is so long.');
    // ui.controller.editorTab.getDom().appendChild(test_item.dom.self);
 
-   _controller.client = new edienilno.WwbsocketClient('127.0.0.1:20202/ws');
+   _controller.client = new edienilno.WwbsocketClient('/ws');
    _controller.client.onOnline(function () {
       console.log('online');
-      ui.icon.disconnect.dom.style.display = 'none';
-      ui.icon.disconnect.uncheck();
+      ui.icon.disconnect.check();
    });
    _controller.client.onOffline(function () {
       console.log('offline');
-      ui.icon.disconnect.dom.style.display = 'block';
-      ui.icon.disconnect.check();
+      ui.icon.disconnect.uncheck();
    });
 
    edienilno.loadPlugin(

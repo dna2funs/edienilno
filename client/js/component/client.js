@@ -21,7 +21,7 @@ function edienilnoWsClientOffline(client, fn_list) {
 
 function EdienilnoWsClient(url) {
    if (url.indexOf('://') < 0) {
-      url = (location.protocol === 'http:'?'ws://':'wss://') + url;
+      url = (location.protocol === 'http:'?'ws://':'wss://') + location.host + url;
    }
    var cookie = get_cookie();
    this.url = url;

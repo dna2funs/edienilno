@@ -128,6 +128,14 @@ class LocalFilesystemStorage {
    async move (path, newPath) {
       await helper.fs.rename(path, newPath);
    }
+
+   sync_mkdir (path) {
+      return i_fs.mkdirSync(path);
+   }
+
+   sync_exists (path) {
+      return i_fs.existsSync(path);
+   }
 }
 
 module.exports = {

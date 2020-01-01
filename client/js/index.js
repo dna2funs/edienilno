@@ -146,6 +146,7 @@ function init_ui() {
       'fileBrowser',
       './js/component/plugin/file_browser.js',
       {
+         client: _controller.client,
          view: ui.controller.view,
          editorTab: ui.controller.editorTab
       }

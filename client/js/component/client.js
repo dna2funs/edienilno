@@ -1,6 +1,7 @@
 'use strict';
 
 //@include common.js # get_cookie
+//@include common.js # generate_id
 
 (function () {
 
@@ -29,6 +30,7 @@ function EdienilnoWsClient(url) {
    this.online = false;
    this._onClientOnline = [];
    this._onClientOffline = [];
+   this._onMessage = {};
 
    var _this = this;
    this.event = {
@@ -74,6 +76,24 @@ function EdienilnoWsClient(url) {
             edienilnoWsClientOffline(_this, _this._onClientOffline);
             return;
          }
+         var id = json.id;
+         var timestamp = new Date().getTime();
+         var fnObj = _this._onMessage[id];
+         var stat = fnObj && fnObj.act && fnObj.act(json);
+         if (stat) {
+            fnObj.timestamp = timestamp;
+         } else {
+            delete _this._onMessage[id];
+         }
+
+         // clean up fnObj
+         Object.keys(_this._onMessage).forEach(function (id) {
+            var fnObj = _this._onMessage[id];
+            if (!fnObj) return;
+            if (timestamp - fnObj.timestamp > 1000 * 60 * 5) {
+               delete _this._onMessage[id];
+            }
+         });
       }
    };
    this._client = null;
@@ -94,9 +114,27 @@ EdienilnoWsClient.prototype = {
       this._client.addEventListener('error', this.event.error);
       this._client.addEventListener('message', this.event.message);
    },
-   dispose: function () {},
+   disconnect: function () {
+      if (!this._client) return;
+      this._client.close();
+   },
+   dispose: function () {
+      this.disconnect();
+   },
    isOnline: function () {
       return this.online;
+   },
+   request: function (data, fn) {
+      if (!this._client) return null;
+      if (!this.isOnline()) return null;
+      var id = generate_id();
+      var obj = Object.assign({ id: id }, data);
+      if (fn) this._onMessage[id] = {
+         timestamp: new Date().getTime(),
+         act: fn
+      };
+      this._client.send(JSON.stringify(obj));
+      return id;
    },
    onOnline: function(fn) {
       if (this._onClientOnline.indexOf(fn) >= 0) return;

@@ -2,7 +2,13 @@ const i_ws = require('ws');
 const i_auth = require('./auth');
 
 function process_cmd(ws, m, env) {
+   let obj = {};
    switch(m.cmd) {
+      case 'echo':
+         obj.id = m.id;
+         obj.echo = m.echo;
+         ws.send(JSON.stringify(obj));
+         break;
    }
 }
 

@@ -8,6 +8,12 @@ function dom(selector) {
    return document.querySelector(selector);
 }
 
+function generate_id() {
+   var timesamp = new Date().getTime();
+   var rnd = ~~(Math.random() * 100);
+   return timesamp + '-' + rnd;
+}
+
 function ajax(options, done_fn, fail_fn) {
    var xhr = new XMLHttpRequest(), payload = null;
    xhr.open(options.method || 'POST', options.url + (options.data ? uriencode(options.data) : ''), true);

@@ -4,12 +4,6 @@ var system = {
    bundle: null
 };
 
-function generateId() {
-   var timesamp = new Date().getTime();
-   var rnd = ~~(Math.random() * 100);
-   return timesamp + '-' + rnd;
-}
-
 function basename(filename) {
    return filename.split('/').pop();
 }
@@ -61,8 +55,8 @@ var api = {
    },
    // create a new file browser with an ID
    create: function (filename) {
-      var id = 'fileBrowser-' + generateId();
-      while (api._instances[id]) id = generateId();
+      var id = 'fileBrowser-' + generate_id();
+      while (api._instances[id]) id = generate_id();
       var instance = new EdienilnoFileBrowser(id, filename);
       api._instances[id] = instance;
       return id;

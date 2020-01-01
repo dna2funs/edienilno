@@ -42,6 +42,12 @@ var _event = {
       switchSideTab: function (_, icon) {
          _controller.switchSideTab(icon.name);
       },
+      connectIfOffline: function (_, icon) {
+         if (!_controller.client) return;
+         icon.dom.style.display = 'none';
+         if (_controller.client.isOnline()) return;
+         _controller.client.connect();
+      },
       showSettingsMenu: function (_, icon) {
          if (ui.dropdown.settings_menu.isVisible()) {
             ui.dropdown.settings_menu.hide();
@@ -95,6 +101,7 @@ function init_ui() {
    ui.controller.editorTab.onTabClick(function (evt, navItem) {
       var id = navItem.getAttribute('data-id');
       ui.controller.view.bind(id);
+      ui.controller.view.resize();
    });
 
    ui.iconnav = new edienilno.nav.IconNav(ui.layout.dom.nav);
@@ -103,7 +110,12 @@ function init_ui() {
    ui.iconnav.pushTop('searcher', './images/search-line.svg', _event.nav.switchSideTab);
    ui.iconnav.pushTop('plugins', './images/plugin-line.svg', _event.nav.switchSideTab);
    ui.iconnav.pushBottom('settings', './images/cog-line.svg', _event.nav.showSettingsMenu);
+   ui.iconnav.pushBottom('settings', './images/wifi-no-line.svg', _event.nav.connectIfOffline);
    ui.iconnav.dom.topIcons[0].check();
+
+   ui.icon = {};
+   ui.icon.disconnect = ui.iconnav.dom.bottomIcons[1];
+   ui.icon.disconnect.check();
 
    ui.dropdown = {};
    ui.dropdown.settings_menu = new edienilno.DropdownView(ui.iconnav.dom.bottomIcons[0].dom);
@@ -117,6 +129,18 @@ function init_ui() {
 
    // var test_item = new edienilno.SideItem('#', 'Space', 'This space has no description but this text is so long.');
    // ui.controller.editorTab.getDom().appendChild(test_item.dom.self);
+
+   _controller.client = new edienilno.WwbsocketClient('127.0.0.1:20202/ws');
+   _controller.client.onOnline(function () {
+      console.log('online');
+      ui.icon.disconnect.dom.style.display = 'none';
+      ui.icon.disconnect.uncheck();
+   });
+   _controller.client.onOffline(function () {
+      console.log('offline');
+      ui.icon.disconnect.dom.style.display = 'block';
+      ui.icon.disconnect.check();
+   });
 
    edienilno.loadPlugin(
       'fileBrowser',

@@ -17,6 +17,7 @@ function EdienilnoIcon(name, imageUri, actionFn) {
    var img = document.createElement('img');
    img.style.width = '36px';
    img.style.height = '36px';
+   img.style.cursor = 'pointer';
    img.src = imageUri;
    this.dom.appendChild(img);
    this._selected = false;
@@ -25,7 +26,7 @@ function EdienilnoIcon(name, imageUri, actionFn) {
    var _this = this;
    this.event = {
       mouseEnter: function (evt) {
-         _this.dom.style.opacity = 1;
+         _this.dom.style.opacity = 0.6;
       },
       mouseLeave: function (evt) {
          if (_this._selected) {
@@ -49,15 +50,17 @@ EdienilnoIcon.prototype = {
       this.dom.removeEventListener('mouseleave', this.event.mouseLeave);
       this.dom.removeEventListener('click', this.event.click);
    },
-   check: function () {
+   check: function (fn) {
       this._selected = true;
       this.dom.style.opacity = 1;
       this.dom.style.borderLeft = '3px solid black';
+      fn && fn(this.dom);
    },
-   uncheck: function () {
+   uncheck: function (fn) {
       this._selected = false;
       this.dom.style.opacity = 0.3;
       this.dom.style.borderLeft = null;
+      fn && fn(this.dom);
    }
 };
 

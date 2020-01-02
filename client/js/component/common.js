@@ -36,6 +36,16 @@ function EdienilnoSideItem(url, title, desc) {
       img: document.createElement('img')
    };
 }
+EdienilnoSideItem.prototype = {
+   setTitle: function (title) {
+      this.dom.title.innerHTML = '';
+      this.dom.title.appendChild(document.createTextNode(title));
+   },
+   setDescription: function (desc) {
+      this.dom.desc.innerHTML = '';
+      this.dom.desc.appendChild(document.createTextNode(desc));
+   }
+};
 
 function EdienilnoScrollableView(container) {
    var div = document.createElement('div');

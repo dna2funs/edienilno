@@ -5,28 +5,119 @@ var system = {
 };
 
 function basename(filename) {
+   if (!filename || filename === '/') return null;
    return filename.split('/').pop();
 }
 
 function EdienilnoFileBrowser(id, filename) {
    this.id = id;
    var div = document.createElement('div');
-   var nav = new edienilno.SideItem(null, basename(filename), filename);
+   var nav = new edienilno.SideItem(null, basename(filename) || '(root)', filename);
    this.dom = {
       self: div,
+      list: document.createElement('div'),
       nav: nav
    };
    this.data = {
+      loading: true,
       filename: filename,
       filelist: []
    };
    system.bundle.editorTab.getDom().appendChild(nav.dom.self);
    nav.dom.self.setAttribute('data-plugin', plugin.name);
    nav.dom.self.setAttribute('data-id', id);
-   div.innerHTML = 'Hello "' + filename + '"!';
    this.hide();
+   this.load(filename);
+
+   var _this = this;
+   this.event = {
+      click: function (evt) {
+         var value = evt.target.getAttribute('data-folder');
+         if (value) {
+            _this.load(_this.data.filename + value);
+            return;
+         }
+      }
+   };
+   this.dom.self.appendChild(this.dom.list);
+   this.dom.self.addEventListener('click', this.event.click);
 }
 EdienilnoFileBrowser.prototype = {
+   _empty: function () {
+      while (this.dom.list.children.length) {
+         this.dom.list.removeChild(this.dom.list.children[0]);
+      }
+      this.dom.list.innerHTML = '';
+   },
+   load: function (path) {
+      var _this = this;
+      this.data.loading = true;
+      this.data.filename = path;
+      if (path.endsWith('/')) {
+         path = path.substring(0, path.length-1);
+      }
+      this.dom.nav.setTitle(basename(path) || '(root)');
+      this.dom.nav.setDescription(this.data.filename);
+      this._empty();
+      this.dom.list.innerHTML = 'Loading ...';
+      return new Promise(function (r, e) {
+         var timeout = false;
+         var timer = setTimeout(function () {
+            timeout = true;
+            e();
+         }, 1000 * 10);
+         system.bundle.client.request(
+            {cmd: 'fileBrowser.list', path: _this.data.filename},
+            function (data) {
+               if (timeout) return;
+               _this.data.loading = false;
+               _this.data.filelist = data.list;
+               _this.data.filelist.sort(function (a, b) {
+                  if (a.path.endsWith('/')) {
+                     if (b.path.endsWith('/')) {
+                        return (a > b)?-1:1
+                     }
+                     return -1;
+                  } else if (b.path.endsWith('/')) {
+                     return 1;
+                  } else {
+                     return (a > b)?-1:1;
+                  }
+               });
+               clearTimeout(timer);
+               _this.render();
+               r();
+            }
+         );
+      });
+   },
+   renderOne: function (path) {
+      var div = document.createElement('div');
+      div.classList.add('xitem');
+      if (path.endsWith('/')) {
+         div.classList.add('xitem-yellow');
+         div.setAttribute('data-folder', path);
+      } else {
+         div.classList.add('xitem-blue');
+         div.setAttribute('data-file', path);
+      }
+      div.style.cursor = 'pointer';
+      div.appendChild(document.createTextNode(path));
+      this.dom.list.appendChild(div);
+   },
+   render: function () {
+      this._empty();
+      if (!this.data.filelist.length) {
+         var div = document.createElement('div');
+         div.className = 'xitem xitem-orange';
+         div.innerHTML = '(no item)';
+         this.dom.list.appendChild(div);
+      }
+      for (var i = 0, n = this.data.filelist.length; i < n; i++) {
+         var item = this.data.filelist[i];
+         this.renderOne(item.path);
+      }
+   },
    resize: function () {},
    show: function () {
       if (!this.dom.self.parentNode) {
@@ -41,6 +132,7 @@ EdienilnoFileBrowser.prototype = {
       this.dom.self.style.display = 'none';
    },
    dispose: function () {
+      this.dom.self.removeEventListener('click', this.event.click);
       system.bundle.editorTab.getDom().removeChild(this.nav.dom.self);
    }
 };

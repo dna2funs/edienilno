@@ -138,7 +138,7 @@ EdienilnoFamilyAccountEditor.prototype = {
                   _this._api.saveToLocal();
                   alert('Loaded.');
                }
-            )
+            );
          },
          saveToLocal: function () {
             var data = JSON.stringify({
@@ -159,7 +159,7 @@ EdienilnoFamilyAccountEditor.prototype = {
                function () {
                   alert('Saved.');
                }
-            )
+            );
          },
          renderOne: function (item, index) {
             var div = document.createElement('div');

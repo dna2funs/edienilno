@@ -144,7 +144,27 @@ function init_ui() {
       ui.icon.disconnect.uncheck();
    });
 
+
    edienilno.loadPlugin(
+      'fileBrowser',
+      './js/component/plugin/file_browser.js',
+      {
+         client: _controller.client,
+         view: ui.controller.view,
+         editorTab: ui.controller.editorTab
+      }
+   ).then(function (plugin) {
+      console.log(plugin);
+      var id = plugin.api.create('/');
+      ui.controller.view.register(id, plugin.api.get(id));
+      ui.controller.view.bind(id);
+      id = plugin.api.create('/');
+      ui.controller.view.register(id, plugin.api.get(id));
+      ui.controller.view.bind(id);
+   }, function () {
+   });
+
+   /*edienilno.loadPlugin(
       'familyAccount',
       './js/component/plugin/family_account.js',
       {
@@ -158,7 +178,26 @@ function init_ui() {
       ui.controller.view.register(id, plugin.api.get(id));
       ui.controller.view.bind(id);
    }, function () {
-   });
+   });*/
+
+   /*edienilno.loadPlugin(
+      'codeEditor',
+      './js/component/plugin/code_editor.js',
+      {
+         client: _controller.client,
+         view: ui.controller.view,
+         editorTab: ui.controller.editorTab
+      }
+   ).then(function (plugin) {
+      console.log(plugin);
+      var id = plugin.api.create('/personal/editor.js');
+      ui.controller.view.register(id, plugin.api.get(id));
+      ui.controller.view.bind(id);
+      id = plugin.api.create('/personal/common.js');
+      ui.controller.view.register(id, plugin.api.get(id));
+      ui.controller.view.bind(id);
+   }, function () {
+   });*/
 
    _controller.switchSideTab('editor');
    if (ui.layout.isNarrowMode()) {

@@ -136,6 +136,7 @@ EdienilnoFileBrowser.prototype = {
                   _this._api.renderList();
                   _this._api.buildReport();
                   _this._api.saveToLocal();
+                  alert('Loaded.');
                }
             )
          },
@@ -155,7 +156,9 @@ EdienilnoFileBrowser.prototype = {
             });
             system.bundle.client.request(
                {cmd: 'simpleEdit.save', path: '/2020.fyat', data: data},
-               function () {}
+               function () {
+                  alert('Saved.');
+               }
             )
          },
          renderOne: function (item, index) {

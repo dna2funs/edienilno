@@ -48,7 +48,7 @@ EdienilnoViewController.prototype = {
       }
    },
    resize: function () {
-      var editor = this.editors[this.bind];
+      var editor = this.editors[this.bindName];
       if (editor && editor.resize) editor.resize();
    }
 };

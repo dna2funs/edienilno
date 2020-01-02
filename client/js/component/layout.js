@@ -35,7 +35,7 @@ EdienilnoSideNavLayout.prototype = {
       this.dom.nav.style.top = this.dom.parent.offsetTop + 'px';
       this.dom.nav.style.width = this.options.navWidth + 'px';
       this.dom.nav.style.height = this.dom.parent.offsetHeight + 'px';
-      this.dom.nav.style.border = '1px solid red';
+      this.dom.nav.style.borderRight = '1px solid #eeeeee';
 
       if (!this.sideVisible) {
          this.dom.side.style.display = 'none';
@@ -75,14 +75,13 @@ EdienilnoSideNavLayout.prototype = {
       this.dom.side.style.top = this.dom.parent.offsetTop + 'px';
       this.dom.side.style.width = this.options.sideWidth + 'px';
       this.dom.side.style.height = this.dom.parent.offsetHeight + 'px';
-      this.dom.side.style.border = '1px solid blue';
+      this.dom.side.style.borderRight = '1px solid #eeeeee';
 
       this.dom.view.style.position = 'absolute';
       this.dom.view.style.left = (this.options.navWidth + this.options.sideWidth) + 'px';
       this.dom.view.style.top = this.dom.parent.offsetTop + 'px';
       this.dom.view.style.width = (this.dom.parent.offsetWidth - this.options.sideWidth - this.options.navWidth) + 'px';
       this.dom.view.style.height = this.dom.parent.offsetHeight + 'px';
-      this.dom.view.style.border = '1px solid green';
    },
    _resizeForNarrowScreen: function () {
       this.narrowMode = true;
@@ -95,14 +94,13 @@ EdienilnoSideNavLayout.prototype = {
       this.dom.side.style.top = this.dom.parent.offsetTop + 'px';
       this.dom.side.style.width = this.options.sideWidth + 'px';
       this.dom.side.style.height = this.dom.parent.offsetHeight + 'px';
-      this.dom.side.style.border = '1px solid blue';
+      this.dom.side.style.border = '1px solid #eeeeee';
 
       this.dom.view.style.position = 'absolute';
       this.dom.view.style.left = this.options.navWidth + 'px';
       this.dom.view.style.top = this.dom.parent.offsetTop + 'px';
       this.dom.view.style.width = (this.dom.parent.offsetWidth - this.options.navWidth) + 'px';
       this.dom.view.style.height = this.dom.parent.offsetHeight + 'px';
-      this.dom.view.style.border = '1px solid green';
    }
 };
 

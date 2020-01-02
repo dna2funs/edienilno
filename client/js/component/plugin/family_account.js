@@ -9,7 +9,7 @@ function basename(filename) {
    return filename.split('/').pop();
 }
 
-function EdienilnoFileBrowser(id, filename) {
+function EdienilnoFamilyAccountEditor(id, filename) {
    this.id = id;
    var div = document.createElement('div');
    var nav = new edienilno.SideItem(null, basename(filename), filename);
@@ -26,7 +26,7 @@ function EdienilnoFileBrowser(id, filename) {
    this._initUI();
    this.hide();
 }
-EdienilnoFileBrowser.prototype = {
+EdienilnoFamilyAccountEditor.prototype = {
    _initUI: function () {
       var div = document.createElement('div');
       div.classList.add('xitem');
@@ -127,7 +127,7 @@ EdienilnoFileBrowser.prototype = {
          },
          loadFromRemote: function () {
             system.bundle.client.request(
-               {cmd: 'simpleEdit.load', path: '/2020.fyat'},
+               {cmd: 'simpleEdit.load', path: _this.data.filename},
                function (data) {
                   if (!data) data = {};
                   if (!data.data) data.data = '{}';
@@ -155,7 +155,7 @@ EdienilnoFileBrowser.prototype = {
                )
             });
             system.bundle.client.request(
-               {cmd: 'simpleEdit.save', path: '/2020.fyat', data: data},
+               {cmd: 'simpleEdit.save', path: _this.data.filename, data: data},
                function () {
                   alert('Saved.');
                }
@@ -169,7 +169,7 @@ EdienilnoFileBrowser.prototype = {
             x.innerHTML = 'Delete';
             div.appendChild(x);
             x = document.createElement('span');
-            x.appendChild(document.createTextNode('( ' + item.m + ' )'));
+            x.appendChild(document.createTextNode(' ( ' + item.m + ' ) '));
             div.appendChild(x);
             x = document.createElement('a');
             if (item.o) {
@@ -349,7 +349,7 @@ var api = {
    create: function (filename) {
       var id = 'fileBrowser-' + generate_id();
       while (api._instances[id]) id = generate_id();
-      var instance = new EdienilnoFileBrowser(id, filename);
+      var instance = new EdienilnoFamilyAccountEditor(id, filename);
       api._instances[id] = instance;
       return id;
    },

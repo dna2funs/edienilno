@@ -1,19 +1,11 @@
 const i_path = require('path');
-const i_fs = require('fs');
 const i_storage = require('../component/storage');
+const i_common = require('../component/common');
 
 const system = {
    baseDir: i_path.resolve(process.env.EDIENILNO_FS_STORAGE || '/tmp'),
    storage: new i_storage.LocalFilesystemStorage(),
 };
-
-function validate_path(path) {
-   if (!path) return null;
-   let parts = path.split(i_path.sep);
-   // max folder deep
-   if (parts.length > 25) return null;
-   return parts.filter((x) => x !== '.' && x !== '..').join(i_path.sep);
-}
 
 const api = {
    initialize: () => {},
@@ -21,15 +13,9 @@ const api = {
       if (!m.cmd || !m.id || !m.path) return false;
       let username = env.username;
       if (!username) return false;
+      i_common.prepareUserFolder(system.storage, system.baseDir, username);
       let base = i_path.join(system.baseDir, username);
-      if (!system.storage.sync_exists(base)) {
-         try {
-            system.storage.sync_mkdir(base);
-         } catch(err) {
-            return false;
-         }
-      }
-      let filename = validate_path(i_path.join(base, m.path));
+      let filename = i_common.validatePath(i_path.join(base, m.path));
       if (!filename) return false;
       let obj = { id: m.id };
       switch(m.cmd) {
@@ -82,7 +68,7 @@ const api = {
             break;
          case 'fileBrowser.move':
             if (!m.newpath) return false;
-            let newFilename = validate_path(i_path.join(base, m.newpath));
+            let newFilename = i_common.validatePath(i_path.join(base, m.newpath));
             if (!newFilename) return false;
             system.storage.move(filename, newFilename).then(() => {
                ws.send(JSON.stringify(obj));

@@ -7,8 +7,6 @@
  *    rename,
  *    create,
  *    unlink,
- *    open,
- *    close,
  *    read,
  *    write
  * }
@@ -89,7 +87,24 @@ const helper = {
                r();
             });
          });
-      }
+      },
+      // deal with small file only
+      read: async (path) => {
+         return new Promise((r, e) => {
+            i_fs.readFile(path, (err, data) => {
+               if (err) return e(err);
+               r(data);
+            });
+         });
+      },
+      write: async (path, data) => {
+         return new Promise((r, e) => {
+            i_fs.writeFile(path, data, (err) => {
+               if (err) return e(err);
+               r();
+            });
+         });
+      },
    }, // fs
 };
 
@@ -127,6 +142,14 @@ class LocalFilesystemStorage {
 
    async move (path, newPath) {
       await helper.fs.rename(path, newPath);
+   }
+
+   async loadSmallFile (path) {
+      return await helper.fs.read(path);
+   }
+
+   async saveSmallFile (path, data) {
+      await helper.fs.write(path, data);
    }
 
    sync_mkdir (path) {

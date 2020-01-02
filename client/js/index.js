@@ -145,8 +145,8 @@ function init_ui() {
    });
 
    edienilno.loadPlugin(
-      'fileBrowser',
-      './js/component/plugin/file_browser.js',
+      'familyAccount',
+      './js/component/plugin/family_account.js',
       {
          client: _controller.client,
          view: ui.controller.view,
@@ -154,10 +154,7 @@ function init_ui() {
       }
    ).then(function (plugin) {
       console.log(plugin);
-      var id = plugin.api.create('/test');
-      ui.controller.view.register(id, plugin.api.get(id));
-      ui.controller.view.bind(id);
-      id = plugin.api.create('/test2');
+      var id = plugin.api.create('/2020.fyat');
       ui.controller.view.register(id, plugin.api.get(id));
       ui.controller.view.bind(id);
    }, function () {

@@ -2,8 +2,16 @@ const i_uuid = require('uuid');
 const i_keyval = require('./keyval');
 const i_env = require('./env');
 
+const system = {
+   otop_passpath: process.env.EDIENILNO_PASS_DIR,
+};
+
 const api = {
    authenticate: (username, password) => new Promise((resolve, reject) => {
+      if (system.otop_passpath) {
+         api.authenticate_for_otop(username, password).then(resolve, reject);
+         return;
+      }
       // no auth
       // ldap integration: api.authenticate = api.authenticate_for_ldap
       if (i_env.ldap_server) {
@@ -17,6 +25,22 @@ const api = {
       if (!meta) return null;
       return meta;
    },
+   authenticate_for_otop: async (username, password) => new Promise((resolve, reject) => {
+      const i_fs = require('fs');
+      const i_path = require('path');
+      let base = i_path.resolve(system.otop_passpath);
+      if (!i_fs.existsSync(base)) return reject({username, error: 'system not ready'});
+      let filename = i_path.join(base, username);
+      if (!i_fs.existsSync(filename)) return reject({username, error: 'auth failed'});
+      let stat = i_fs.statSync(filename);
+      if (!stat.isFile()) return reject({username, error: 'auth failed'});
+      let passphrase = i_fs.readFileSync(filename).toString().trim();
+      if (password === passphrase) {
+         resolve(keyval_setauth(username));
+      } else {
+         reject({username, error: 'auth failed'});
+      }
+   }),
    authenticate_for_ldap: (username, password) => new Promise((resolve ,reject) => {
       const i_ldap = require('ldapjs');
       let client = i_ldap.createClient({

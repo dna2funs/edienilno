@@ -127,7 +127,7 @@ EdienilnoFileBrowser.prototype = {
          },
          loadFromRemote: function () {
             system.bundle.client.request(
-               {cmd: 'familyAccount.load', path: '/2020.fyat'},
+               {cmd: 'simpleEdit.load', path: '/2020.fyat'},
                function (data) {
                   if (!data) data = {};
                   if (!data.data) data.data = '{}';
@@ -154,7 +154,7 @@ EdienilnoFileBrowser.prototype = {
                )
             });
             system.bundle.client.request(
-               {cmd: 'familyAccount.save', path: '/2020.fyat', data: data},
+               {cmd: 'simpleEdit.save', path: '/2020.fyat', data: data},
                function () {}
             )
          },

@@ -330,7 +330,7 @@ EdienilnoFamilyAccountEditor.prototype = {
                }
             },
             btnClose: function () {
-               _this.dispose();
+               system.bundle.view.dispose(_this.id);
             }
          }
       };

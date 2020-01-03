@@ -137,10 +137,12 @@ function init_ui() {
    _controller.client = new edienilno.WwbsocketClient('/ws');
    _controller.client.onOnline(function () {
       console.log('online');
+      _controller._online = true;
       ui.icon.disconnect.check();
    });
    _controller.client.onOffline(function () {
       console.log('offline');
+      _controller._online = false;
       ui.icon.disconnect.uncheck();
    });
 
@@ -152,11 +154,24 @@ function init_ui() {
    _controller.pluginer.register('fileBrowser', './js/component/plugin/file_browser.js');
    _controller.pluginer.register('familyAccount', './js/component/plugin/family_account.js');
    _controller.pluginer.register('codeEditor', './js/component/plugin/code_editor.js');
-   _controller.pluginer.open('fileBrowser', '/');
+   waitForOnline(5000, function () {
+      _controller.pluginer.open('fileBrowser', '/');
+   });
 
    _controller.switchSideTab('editor');
    if (ui.layout.isNarrowMode()) {
       _controller.switchSideTab('editor');
+   }
+
+   function waitForOnline(timeout, fn) {
+      var timestamp = new Date().getTime();
+      setTimeout(_wait, 0);
+
+      function _wait() {
+         if (new Date().getTime() - timestamp >= timeout) return;
+         if (!_controller._online) return setTimeout(_wait, 0);
+         fn && fn();
+      }
    }
 }
 

@@ -54,21 +54,7 @@ function EdienilnoFileBrowser(id, filename) {
          if (value) {
             parts = value.split('.');
             if (parts.length > 1 && parts[parts.length-1] === 'fyat') {
-               edienilno.loadPlugin(
-                  'familyAccount',
-                  './js/component/plugin/family_account.js',
-                  {
-                     client: system.bundle.client,
-                     view: system.bundle.view,
-                     editorTab: system.bundle.editorTab
-                  }
-               ).then(function (plugin) {
-                  console.log(plugin);
-                  var id = plugin.api.create(_this.data.filename + value);
-                  ui.controller.view.register(id, plugin.api.get(id));
-                  ui.controller.view.bind(id);
-               }, function () {
-               });
+               system.bundle.pluginer.open('familyAccount', _this.data.filename + value);
             }
          } // data-file
       }

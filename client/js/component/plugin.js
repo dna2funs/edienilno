@@ -69,6 +69,44 @@ function edienilnoLoadPlugin(name, path, bundle) {
    });
 }
 
+function EdienilnoPluginManager(bundle) {
+   this.bundle = bundle;
+   if (!this.bundle) this.bundle = {};
+   this.bundle.pluginer = this;
+   this.map = {};
+   this.loaded = {};
+}
+EdienilnoPluginManager.prototype = {
+   register: function (pluginName, path) {
+      this.map[pluginName] = path;
+   },
+   open: function (pluginName, filename) {
+      var _this = this;
+      var plugin = this.loaded[pluginName];
+      if (plugin) {
+         _open(plugin, filename);
+      } else if (this.map[pluginName]) {
+         edienilnoLoadPlugin(
+            pluginName, this.map[pluginName], this.bundle
+         ).then(function (plugin) {
+            _this.loaded[pluginName] = plugin;
+            _open(plugin, filename);
+         }, function () {
+         });
+      } else {
+         // no such plugin
+      }
+
+      function _open(plugin, filename) {
+         var id = plugin.api.create(filename);
+         _this.bundle.view.register(id, plugin.api.get(id));
+         _this.bundle.view.bind(id);
+      }
+   }
+};
+
+if (!window.edienilno) window.edienilno = {};
 window.edienilno.loadPlugin = edienilnoLoadPlugin;
+window.edienilno.PluginManager = EdienilnoPluginManager;
 
 })();

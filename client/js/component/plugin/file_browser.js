@@ -11,18 +11,23 @@ function basename(filename) {
 
 function EdienilnoFileBrowser(id, filename) {
    this.id = id;
-   var div = document.createElement('div');
-   var nav = new edienilno.SideItem(null, basename(filename) || '(root)', filename);
-   this.dom = {
-      self: div,
-      list: document.createElement('div'),
-      nav: nav
-   };
    this.data = {
       loading: true,
       filename: filename,
       filelist: []
    };
+   var div = document.createElement('div');
+   var nav = new edienilno.SideItem(null, basename(filename) || '(root)', filename);
+   this.dom = {
+      self: div,
+      list: document.createElement('div'),
+      btnUp: document.createElement('div'),
+      nav: nav
+   };
+   this.dom.btnUp.innerHTML = '../';
+   this.dom.btnUp.className = 'xitem xitem-yellow';
+   this.dom.btnUp.style.cursor = 'pointer';
+   this.dom.btnUp.setAttribute('data-folder', '../');
    system.bundle.editorTab.getDom().appendChild(nav.dom.self);
    nav.dom.self.setAttribute('data-plugin', plugin.name);
    nav.dom.self.setAttribute('data-id', id);
@@ -34,11 +39,19 @@ function EdienilnoFileBrowser(id, filename) {
       click: function (evt) {
          var value = evt.target.getAttribute('data-folder');
          if (value) {
+            if (value === '../') {
+               var parts = _this.data.filename.split('/');
+               parts.pop();
+               parts.pop();
+               _this.data.filename = parts.join('/') + '/';
+               value = '';
+            }
             _this.load(_this.data.filename + value);
             return;
          }
       }
    };
+   this.dom.self.appendChild(this.dom.btnUp);
    this.dom.self.appendChild(this.dom.list);
    this.dom.self.addEventListener('click', this.event.click);
 }
@@ -50,9 +63,15 @@ EdienilnoFileBrowser.prototype = {
       this.dom.list.innerHTML = '';
    },
    load: function (path) {
+      if (!system.bundle.client.isOnline()) return;
       var _this = this;
       this.data.loading = true;
       this.data.filename = path;
+      if (path === '/') {
+         this.dom.btnUp.style.display = 'none';
+      } else {
+         this.dom.btnUp.style.display = 'block';
+      }
       if (path.endsWith('/')) {
          path = path.substring(0, path.length-1);
       }

@@ -152,6 +152,9 @@ EdienilnoFileBrowser.prototype = {
          this.renderOne(item.path);
       }
    },
+   getFileName() {
+      return this.data.filename;
+   },
    resize: function () {},
    show: function () {
       if (!this.dom.self.parentNode) {

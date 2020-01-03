@@ -346,6 +346,9 @@ EdienilnoFamilyAccountEditor.prototype = {
 
       this._api.loadFromLocal();
    },
+   getFileName() {
+      return this.data.filename;
+   },
    resize: function () {},
    show: function () {
       if (!this.dom.self.parentNode) {

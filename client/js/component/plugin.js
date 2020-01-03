@@ -83,6 +83,7 @@ EdienilnoPluginManager.prototype = {
    open: function (pluginName, filename) {
       var _this = this;
       var plugin = this.loaded[pluginName];
+      if (_goto_if_opened(filename)) return;
       if (plugin) {
          _open(plugin, filename);
       } else if (this.map[pluginName]) {
@@ -95,6 +96,22 @@ EdienilnoPluginManager.prototype = {
          });
       } else {
          // no such plugin
+      }
+
+      function _goto_if_opened(filename) {
+         var editors = _this.bundle.view.editors;
+         var such = Object.keys(editors).filter(function (key) {
+            var editor = editors[key];
+            var opened = editor.getFileName && editor.getFileName();
+            return opened === filename;
+         });
+         if (such.length > 0) {
+            var editor = editors[such[0]];
+            _this.bundle.view.bind(editor.id);
+         } else {
+            return false;
+         }
+         return true;
       }
 
       function _open(plugin, filename) {

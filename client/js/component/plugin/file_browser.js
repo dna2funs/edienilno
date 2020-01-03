@@ -25,9 +25,12 @@ function EdienilnoFileBrowser(id, filename) {
       nav: nav
    };
    this.dom.btnUp.innerHTML = '../';
-   this.dom.btnUp.className = 'xitem xitem-yellow';
+   this.dom.btnUp.className = 'xitem xitem-purple';
    this.dom.btnUp.style.cursor = 'pointer';
    this.dom.btnUp.setAttribute('data-folder', '../');
+   var title = document.createElement('div');
+   title.appendChild(document.createTextNode('File Browser'));
+   title.className = 'xitem xitem-yellow';
    system.bundle.editorTab.getDom().appendChild(nav.dom.self);
    nav.dom.self.setAttribute('data-plugin', plugin.name);
    nav.dom.self.setAttribute('data-id', id);
@@ -59,6 +62,7 @@ function EdienilnoFileBrowser(id, filename) {
          } // data-file
       }
    };
+   this.dom.self.appendChild(title);
    this.dom.self.appendChild(this.dom.btnUp);
    this.dom.self.appendChild(this.dom.list);
    this.dom.self.addEventListener('click', this.event.click);
@@ -125,7 +129,7 @@ EdienilnoFileBrowser.prototype = {
       var div = document.createElement('div');
       div.classList.add('xitem');
       if (path.endsWith('/')) {
-         div.classList.add('xitem-yellow');
+         div.classList.add('xitem-purple');
          div.setAttribute('data-folder', path);
       } else {
          div.classList.add('xitem-blue');

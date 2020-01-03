@@ -28,10 +28,20 @@ function EdienilnoFamilyAccountEditor(id, filename) {
 }
 EdienilnoFamilyAccountEditor.prototype = {
    _initUI: function () {
+      var tmp;
       var div = document.createElement('div');
       div.classList.add('xitem');
       div.classList.add('xitem-yellow');
       div.innerHTML = 'Records';
+      tmp = document.createElement('button');
+      tmp.style.float = 'right';
+      tmp.innerHTML = '&times;';
+      tmp.style.border = '1px solid black';
+      tmp.style.backgroundColor = '#fbf59f';
+      tmp.style.marginTop = '-3px';
+      tmp.style.marginRight = '5px';
+      this.dom.btnClose = tmp;
+      div.appendChild(tmp);
       this.dom.self.appendChild(div);
 
       div = document.createElement('div');
@@ -260,62 +270,79 @@ EdienilnoFamilyAccountEditor.prototype = {
             _this._api.saveToLocal();
          }
       };
-      this.dom.btnAdd.addEventListener('click', function () {
-         _this.dom.btnAdd.style.display = 'none';
-         _this.dom.panelAdd.style.display = 'block';
-         _this.dom.txtCost.style.borderBottom = '1px solid black';
-         _this.dom.txtDesc.style.borderBottom = '1px solid black';
-      });
-      this.dom.btnCancel.addEventListener('click', function () {
-         _this.dom.btnAdd.style.display = 'block';
-         _this.dom.panelAdd.style.display = 'none';
-      });
-      this.dom.btnSubmit.addEventListener('click', function () {
-         var cost = parseFloat(_this.dom.txtCost.value);
-         var desc = _this.dom.txtDesc.value;
-         if (isNaN(cost)) {
-            _this.dom.txtCost.selectionStart = 0;
-            _this.dom.txtCost.selectionEnd = _this.dom.txtCost.value.length;
-            _this.dom.txtCost.style.borderBottom = '1px solid red';
-            _this.dom.txtCost.focus();
-            return;
-         } else {
-            _this.dom.txtCost.style.borderBottom = '1px solid black';
+
+      this.event = {
+         click: {
+            btnAdd: function () {
+               _this.dom.btnAdd.style.display = 'none';
+               _this.dom.panelAdd.style.display = 'block';
+               _this.dom.txtCost.style.borderBottom = '1px solid black';
+               _this.dom.txtDesc.style.borderBottom = '1px solid black';
+            },
+            btnCancel: function () {
+               _this.dom.btnAdd.style.display = 'block';
+               _this.dom.panelAdd.style.display = 'none';
+            },
+            btnSubmit: function () {
+               var cost = parseFloat(_this.dom.txtCost.value);
+               var desc = _this.dom.txtDesc.value;
+               if (isNaN(cost)) {
+                  _this.dom.txtCost.selectionStart = 0;
+                  _this.dom.txtCost.selectionEnd = _this.dom.txtCost.value.length;
+                  _this.dom.txtCost.style.borderBottom = '1px solid red';
+                  _this.dom.txtCost.focus();
+                  return;
+               } else {
+                  _this.dom.txtCost.style.borderBottom = '1px solid black';
+               }
+               if (!desc) {
+                  _this.dom.txtDesc.selectionStart = 0;
+                  _this.dom.txtDesc.selectionEnd = _this.dom.txtDesc.value.length;
+                  _this.dom.txtDesc.style.borderBottom = '1px solid red';
+                  _this.dom.txtDesc.focus();
+                  return;
+               } else {
+                  _this.dom.txtDesc.style.borderBottom = '1px solid black';
+               }
+               _this._api.add(cost, desc);
+               _this.dom.btnAdd.style.display = 'block';
+               _this.dom.panelAdd.style.display = 'none';
+               _this.dom.txtCost.value = '';
+               _this.dom.txtDesc.value = '';
+            },
+            btnReset: function () {
+               _this._api.reset();
+            },
+            btnPush: function () {
+               _this._api.saveToRemote();
+            },
+            btnPull: function () {
+               _this._api.loadFromRemote();
+            },
+            panelList: function (evt) {
+               var target = evt.target;
+               var id = target.getAttribute('data-id');
+               if (!id) return;
+               if (target.classList.contains('btn-check')) {
+                  _this._api.toggle(target);
+               } else if (target.classList.contains('btn-delete')) {
+                  _this._api.del(target);
+               }
+            },
+            btnClose: function () {
+               _this.dispose();
+            }
          }
-         if (!desc) {
-            _this.dom.txtDesc.selectionStart = 0;
-            _this.dom.txtDesc.selectionEnd = _this.dom.txtDesc.value.length;
-            _this.dom.txtDesc.style.borderBottom = '1px solid red';
-            _this.dom.txtDesc.focus();
-            return;
-         } else {
-            _this.dom.txtDesc.style.borderBottom = '1px solid black';
-         }
-         _this._api.add(cost, desc);
-         _this.dom.btnAdd.style.display = 'block';
-         _this.dom.panelAdd.style.display = 'none';
-         _this.dom.txtCost.value = '';
-         _this.dom.txtDesc.value = '';
-      });
-      this.dom.btnReset.addEventListener('click', function () {
-         _this._api.reset();
-      });
-      this.dom.btnPush.addEventListener('click', function () {
-         _this._api.saveToRemote();
-      });
-      this.dom.btnPull.addEventListener('click', function () {
-         _this._api.loadFromRemote();
-      });
-      this.dom.panelList.addEventListener('click', function (evt) {
-         var target = evt.target;
-         var id = target.getAttribute('data-id');
-         if (!id) return;
-         if (target.classList.contains('btn-check')) {
-            _this._api.toggle(target);
-         } else if (target.classList.contains('btn-delete')) {
-            _this._api.del(target);
-         }
-      });
+      };
+
+      this.dom.btnAdd.addEventListener('click', this.event.click.btnAdd);
+      this.dom.btnCancel.addEventListener('click', this.event.click.btnCancel);
+      this.dom.btnSubmit.addEventListener('click', this.event.click.btnSubmit);
+      this.dom.btnReset.addEventListener('click', this.event.click.btnReset);
+      this.dom.btnPush.addEventListener('click', this.event.click.btnPush);
+      this.dom.btnPull.addEventListener('click', this.event.click.btnPull);
+      this.dom.panelList.addEventListener('click', this.event.click.panelList);
+      this.dom.btnClose.addEventListener('click', this.event.click.btnClose);
 
       this._api.loadFromLocal();
    },
@@ -333,7 +360,16 @@ EdienilnoFamilyAccountEditor.prototype = {
       this.dom.self.style.display = 'none';
    },
    dispose: function () {
-      system.bundle.editorTab.getDom().removeChild(this.nav.dom.self);
+      this.dom.btnAdd.removeEventListener('click', this.event.click.btnAdd);
+      this.dom.btnCancel.removeEventListener('click', this.event.click.btnCancel);
+      this.dom.btnSubmit.removeEventListener('click', this.event.click.btnSubmit);
+      this.dom.btnReset.removeEventListener('click', this.event.click.btnReset);
+      this.dom.btnPush.removeEventListener('click', this.event.click.btnPush);
+      this.dom.btnPull.removeEventListener('click', this.event.click.btnPull);
+      this.dom.panelList.removeEventListener('click', this.event.click.panelList);
+      this.dom.btnClose.removeEventListener('click', this.event.click.btnClose);
+      system.bundle.editorTab.getDom().removeChild(this.dom.nav.dom.self);
+      system.bundle.view.getDom().removeChild(this.dom.self);
    }
 };
 

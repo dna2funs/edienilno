@@ -37,10 +37,11 @@ function EdienilnoFileBrowser(id, filename) {
    var _this = this;
    this.event = {
       click: function (evt) {
+         var parts;
          var value = evt.target.getAttribute('data-folder');
          if (value) {
             if (value === '../') {
-               var parts = _this.data.filename.split('/');
+               parts = _this.data.filename.split('/');
                parts.pop();
                parts.pop();
                _this.data.filename = parts.join('/') + '/';
@@ -48,7 +49,28 @@ function EdienilnoFileBrowser(id, filename) {
             }
             _this.load(_this.data.filename + value);
             return;
-         }
+         } // data-folder
+         value = evt.target.getAttribute('data-file');
+         if (value) {
+            parts = value.split('.');
+            if (parts.length > 1 && parts[parts.length-1] === 'fyat') {
+               edienilno.loadPlugin(
+                  'familyAccount',
+                  './js/component/plugin/family_account.js',
+                  {
+                     client: system.bundle.client,
+                     view: system.bundle.view,
+                     editorTab: system.bundle.editorTab
+                  }
+               ).then(function (plugin) {
+                  console.log(plugin);
+                  var id = plugin.api.create(_this.data.filename + value);
+                  ui.controller.view.register(id, plugin.api.get(id));
+                  ui.controller.view.bind(id);
+               }, function () {
+               });
+            }
+         } // data-file
       }
    };
    this.dom.self.appendChild(this.dom.btnUp);
@@ -63,7 +85,10 @@ EdienilnoFileBrowser.prototype = {
       this.dom.list.innerHTML = '';
    },
    load: function (path) {
-      if (!system.bundle.client.isOnline()) return;
+      if (!system.bundle.client.isOnline()) {
+         alert('Offline.');
+         return;
+      }
       var _this = this;
       this.data.loading = true;
       this.data.filename = path;

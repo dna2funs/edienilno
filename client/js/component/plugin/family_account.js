@@ -384,12 +384,11 @@ var api = {
    _instances: {},
    // initialize api on first load
    initialize: function (bundle) {
-      console.log('inside fileBrowser', bundle);
       system.bundle = bundle;
    },
    // create a new file browser with an ID
    create: function (filename) {
-      var id = 'fileBrowser-' + generate_id();
+      var id = 'familyAccount-' + generate_id();
       while (api._instances[id]) id = generate_id();
       var instance = new EdienilnoFamilyAccountEditor(id, filename);
       api._instances[id] = instance;
@@ -398,6 +397,9 @@ var api = {
    // get created file browser with an ID
    get: function (id) {
       return api._instances[id];
+   },
+   isReady: function () {
+      return true;
    },
    // render for file browser with a specified ID
    render: function (id) {},

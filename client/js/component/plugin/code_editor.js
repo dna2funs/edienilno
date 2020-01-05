@@ -10,6 +10,10 @@ function basename(filename) {
 
 function EdienilnoCodeEditor(id, filename) {
    this.id = id;
+   if (!filename) {
+      this.dispose();
+      return;
+   }
    var div = document.createElement('div');
    var nav = new edienilno.SideItem(null, basename(filename), filename);
    this.dom = {
@@ -24,7 +28,7 @@ function EdienilnoCodeEditor(id, filename) {
    nav.dom.self.setAttribute('data-id', id);
    // div.innerHTML = 'Hello "' + filename + '"!';
 
-   this.editor = new EdienilnoEditor(div);
+   this.editor = new window.EdienilnoEditor(div);
    this.editor.self.style.height = '100%';
    this.editor.self.style.width = '100%';
    this.editor.create('edienilno://' + filename, '', {}, { readOnly: false });
@@ -58,21 +62,29 @@ EdienilnoCodeEditor.prototype = {
       this.dom.self.style.display = 'none';
    },
    dispose: function () {
-      system.bundle.editorTab.getDom().removeChild(this.nav.dom.self);
+      if (!this.data || !this.data.filename) return;
+      system.bundle.view.getDom().removeChild(this.dom.self.dom.self);
+      system.bundle.editorTab.getDom().removeChild(this.dom.nav.dom.self);
    }
 };
 
 var api = {
    _ui: {},
    _instances: {},
+   _ready: false,
    // initialize api on first load
    initialize: function (bundle) {
-      console.log('inside fileBrowser', bundle);
       system.bundle = bundle;
+      edienilno.loadScript('./js/editor/vs/loader.js').then(function () {
+         edienilno.loadScript('./js/editor.js').then(function () {
+            api._ready = true;
+         });
+      });
    },
    // create a new file browser with an ID
    create: function (filename) {
-      var id = 'fileBrowser-' + generate_id();
+      if (!api._ready) return null;
+      var id = 'codeEditor-' + generate_id();
       while (api._instances[id]) id = generate_id();
       var instance = new EdienilnoCodeEditor(id, filename);
       api._instances[id] = instance;
@@ -81,6 +93,9 @@ var api = {
    // get created file browser with an ID
    get: function (id) {
       return api._instances[id];
+   },
+   isReady: function () {
+      return api._ready;
    },
    // render for file browser with a specified ID
    render: function (id) {},

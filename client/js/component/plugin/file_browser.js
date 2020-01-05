@@ -56,6 +56,7 @@ function EdienilnoFileBrowser(id, filename) {
          value = evt.target.getAttribute('data-file');
          if (value) {
             system.bundle.pluginer.open(_this.data.filename + value);
+            return;
          } // data-file
       },
       btnCloseClick: function (evt) {
@@ -209,6 +210,9 @@ var api = {
    // get created file browser with an ID
    get: function (id) {
       return api._instances[id];
+   },
+   isReady: function () {
+      return true;
    },
    // render for file browser with a specified ID
    render: function (id) {},

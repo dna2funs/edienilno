@@ -7,7 +7,8 @@ if (!window.edienilno.plugins) window.edienilno.plugins = {};
 
 var system = {
    timeout: 10 /* 10 s */,
-   plugins: {}
+   plugins: {},
+   loadedScript: {}
 };
 
 function extname(filename) {
@@ -17,6 +18,29 @@ function extname(filename) {
    return filename.substring(i);
 }
 
+function edienilnoLoadScript(path) {
+   return new Promise(function (r, e) {
+      if (system.loadedScript[path] === 'loaded') return r();
+      if (system.loadedScript[path] === 'loading') {
+         waitScriptLoaded();
+         return;
+      }
+      var script = document.createElement('script');
+      script.src = path;
+      system.loadedScript[path] = 'loading';
+      script.addEventListener('load', function () {
+         system.loadedScript[path] = 'loaded';
+         r();
+      });
+      document.body.appendChild(script);
+
+      function waitScriptLoaded() {
+         if (system.loadedScript[path] === 'loaded') return r();
+         setTimeout(waitScriptLoaded);
+      }
+   });
+}
+
 /*
 plugin = {
    _create: function () { return plugin.api; },
@@ -24,6 +48,7 @@ plugin = {
       initialize: function (bundle) {},
       create: function (filename) { return id; },
       get: function (id) {},
+      isReady: function () { return true/false; },
       ? render: function (id) {},
       ? close: function (id) {}
    }
@@ -39,6 +64,7 @@ function edienilnoLoadPlugin(name, path, bundle) {
       timeout = true;
       if (script && script.parentNode) {
          script.parentNode.removeChild(script);
+         delete system.loadedScript[path];
       }
       console.error('load timeout for plugin:', name);
    }, system.timeout * 1000);
@@ -53,6 +79,7 @@ function edienilnoLoadPlugin(name, path, bundle) {
          system.plugins[name] = plugin;
          script = document.createElement('script');
          script.src = path;
+         system.loadedScript[path] = 'loading';
          script.addEventListener('load', function () {
             if (!window.edienilno || !window.edienilno.plugins[name]) {
                console.error('failed to load plugin:', name);
@@ -60,6 +87,7 @@ function edienilnoLoadPlugin(name, path, bundle) {
             }
             plugin.dom = script;
             if (timeout) return;
+            system.loadedScript[path] = 'loaded';
             plugin.api = window.edienilno.plugins[name];
             if (plugin.api) plugin.api.initialize(bundle);
          });
@@ -119,6 +147,10 @@ EdienilnoPluginManager.prototype = {
          var editors = _this.bundle.view.editors;
          var such = Object.keys(editors).filter(function (key) {
             var editor = editors[key];
+            if (!editor) {
+               delete editors[key];
+               return false;
+            }
             var opened = editor.getFileName && editor.getFileName();
             var ePluginName = editor.getPluginName && editor.getPluginName();
             if (ePluginName && ePluginName !== pluginName) return false;
@@ -134,15 +166,23 @@ EdienilnoPluginManager.prototype = {
       }
 
       function _open(plugin, filename) {
-         var id = plugin.api.create(filename);
-         _this.bundle.view.register(id, plugin.api.get(id));
-         _this.bundle.view.bind(id);
+         _waitPluginReady(plugin, function (plugin) {
+            var id = plugin.api.create(filename);
+            _this.bundle.view.register(id, plugin.api.get(id));
+            _this.bundle.view.bind(id);
+         });
+      }
+
+      function _waitPluginReady(plugin, fn) {
+         if (plugin.api.isReady()) return fn && fn(plugin);
+         setTimeout(_waitPluginReady, 0, plugin, fn);
       }
    }
 };
 
 if (!window.edienilno) window.edienilno = {};
 window.edienilno.loadPlugin = edienilnoLoadPlugin;
+window.edienilno.loadScript = edienilnoLoadScript;
 window.edienilno.PluginManager = EdienilnoPluginManager;
 
 })();

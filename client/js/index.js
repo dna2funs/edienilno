@@ -145,8 +145,8 @@ function init_ui() {
       editorTab: ui.controller.editorTab
    });
    _controller.pluginer.register('fileBrowser', './js/component/plugin/file_browser.js');
-   _controller.pluginer.register('familyAccount', './js/component/plugin/family_account.js', '.fyat');
-   _controller.pluginer.register('codeEditor', './js/component/plugin/code_editor.js');
+   _controller.pluginer.register('familyAccount', './js/component/plugin/family_account.js', ['.fyat']);
+   _controller.pluginer.register('codeEditor', './js/component/plugin/code_editor.js', ['.json']);
    waitForOnline(5000, function () {
       _controller.pluginer.open('/', 'fileBrowser');
    });

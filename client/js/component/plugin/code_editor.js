@@ -18,11 +18,51 @@ function EdienilnoCodeEditor(id, filename) {
    var nav = new edienilno.SideItem(null, basename(filename), filename);
    this.dom = {
       self: div,
+      btnClose: document.createElement('button'),
       nav: nav
    };
    this.data = {
       filename: filename
    };
+
+   var _this = this;
+   this.event = {
+      click: {
+         btnClose: function () {
+            if (_this.editor) {
+               system.bundle.client.request(
+                  {
+                     cmd: 'simpleEdit.save',
+                     path: _this.data.filename,
+                     data: _this.editor.api.getValue()
+                  },
+                  function () {
+                     alert('Saved: ' + _this.data.filename);
+                  }
+               );
+            }
+            system.bundle.view.dispose(_this.id);
+         }
+      }
+   };
+
+   var style = document.querySelector('#code-editor-style');
+   if (!style) {
+      style = document.createElement('style');
+      style.appendChild(document.createTextNode(
+         '.code-editor-btn-close { postion: absolute; top: 2px; right: 16px; opacity: 0.1; background-color: white; border: 1px solid black; }\n' +
+         '.code-editor-btn-close:hover { opacity: 1; }\n'
+      ));
+      document.getElementsByTagName('head')[0].appendChild(style);
+   }
+
+   this.dom.btnClose.innerHTML = '&times;';
+   this.dom.btnClose.className = 'code-editor-btn-close';
+   this.dom.btnClose.style.position = 'absolute';
+   this.dom.btnClose.style.top = '2px';
+   this.dom.btnClose.style.right = '16px';
+   this.dom.btnClose.addEventListener('click', this.event.click.btnClose);
+
    system.bundle.editorTab.getDom().appendChild(nav.dom.self);
    nav.dom.self.setAttribute('data-plugin', plugin.name);
    nav.dom.self.setAttribute('data-id', id);
@@ -31,9 +71,20 @@ function EdienilnoCodeEditor(id, filename) {
    this.editor = new window.EdienilnoEditor(div);
    this.editor.self.style.height = '100%';
    this.editor.self.style.width = '100%';
-   this.editor.create('edienilno://' + filename, '', {}, { readOnly: false });
-   this.editor.on_content_load(function (uri) { return Promise.resolve(null);});
-   this.editor.on_content_ready(function () {});
+   this.editor.on_content_load(function (uri) {});
+   this.editor.on_content_ready(function () {
+      system.bundle.client.request(
+         {cmd: 'simpleEdit.load', path: _this.data.filename},
+         function (data) {
+            if (!data) data = {};
+            if (!data.data) data.data = '';
+            _this.editor.api.setValue(data.data);
+            alert('Load: ' + _this.data.filename);
+         }
+      );
+      div.appendChild(_this.dom.btnClose);
+   });
+   this.editor.create('edienilno:/' + filename, '', {}, { readOnly: false });
 
    this.hide();
 }
@@ -63,7 +114,14 @@ EdienilnoCodeEditor.prototype = {
    },
    dispose: function () {
       if (!this.data || !this.data.filename) return;
-      system.bundle.view.getDom().removeChild(this.dom.self.dom.self);
+      if (this.editor) {
+         var model = this.editor.api.getModel();
+         model.dispose();
+         this.editor.api.dispose();
+         this.editor.dispose();
+      }
+      this.dom.btnClose.removeEventListener('click', this.event.click.btnClose);
+      system.bundle.view.getDom().removeChild(this.dom.self);
       system.bundle.editorTab.getDom().removeChild(this.dom.nav.dom.self);
    }
 };

@@ -113,8 +113,6 @@ require.config({ paths: {
       },
       dispose: function () {
          if (!this.api) return;
-         if (this._backup.on_definition_click) this._backup.on_definition_click = null;
-         if (this._backup.decorations) this._backup.decorations = null;
          this.api.dispose();
       },
       on_content_ready: function (fn, self) {

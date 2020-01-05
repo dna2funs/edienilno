@@ -346,7 +346,10 @@ EdienilnoFamilyAccountEditor.prototype = {
 
       this._api.loadFromLocal();
    },
-   getFileName() {
+   getPluginName: function () {
+      return plugin.name;
+   },
+   getFileName: function () {
       return this.data.filename;
    },
    resize: function () {},

@@ -55,17 +55,28 @@ function EdienilnoFileBrowser(id, filename) {
          } // data-folder
          value = evt.target.getAttribute('data-file');
          if (value) {
-            parts = value.split('.');
-            if (parts.length > 1 && parts[parts.length-1] === 'fyat') {
-               system.bundle.pluginer.open('familyAccount', _this.data.filename + value);
-            }
+            system.bundle.pluginer.open(_this.data.filename + value);
          } // data-file
+      },
+      btnCloseClick: function (evt) {
+         system.bundle.view.dispose(_this.id);
       }
    };
+   var tmp;
+   tmp = document.createElement('button');
+   tmp.style.float = 'right';
+   tmp.innerHTML = '&times;';
+   tmp.style.border = '1px solid black';
+   tmp.style.backgroundColor = '#fbf59f';
+   tmp.style.marginTop = '-3px';
+   tmp.style.marginRight = '5px';
+   this.dom.btnClose = tmp;
+   title.appendChild(tmp);
    this.dom.self.appendChild(title);
    this.dom.self.appendChild(this.dom.btnUp);
    this.dom.self.appendChild(this.dom.list);
    this.dom.self.addEventListener('click', this.event.click);
+   this.dom.btnClose.addEventListener('click', this.event.btnCloseClick);
 }
 EdienilnoFileBrowser.prototype = {
    _empty: function () {
@@ -152,7 +163,10 @@ EdienilnoFileBrowser.prototype = {
          this.renderOne(item.path);
       }
    },
-   getFileName() {
+   getPluginName: function () {
+      return plugin.name;
+   },
+   getFileName: function () {
       return this.data.filename;
    },
    resize: function () {},
@@ -169,8 +183,10 @@ EdienilnoFileBrowser.prototype = {
       this.dom.self.style.display = 'none';
    },
    dispose: function () {
+      this.dom.btnClose.removeEventListener('click', this.event.btnCloseClick);
       this.dom.self.removeEventListener('click', this.event.click);
-      system.bundle.editorTab.getDom().removeChild(this.nav.dom.self);
+      system.bundle.view.getDom().removeChild(this.dom.self);
+      system.bundle.editorTab.getDom().removeChild(this.dom.nav.dom.self);
    }
 };
 

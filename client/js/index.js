@@ -74,7 +74,15 @@ function init_ui() {
    ui.side.searcher.data = { iconIndex: 2 };
    ui.side.plugins.data = { iconIndex: 3 };
    ui.side.team.dom.view.innerHTML = 'Team';
-   ui.side.editor.dom.view.innerHTML = 'Editor <div><a class="edienilno-title-nav-caret" style="width:100%;">+</a></div>';
+   ui.side.editor.dom.view.innerHTML = 'Editor';
+   ui.btn = {};
+   ui.btn.sideEditorPlus = document.createElement('div');
+   ui.btn.sideEditorPlus.innerHTML = '<a class="edienilno-title-nav-caret" style="width:100%;">+</a>';
+   ui.side.editor.dom.view.appendChild(ui.btn.sideEditorPlus);
+   ui.btn.sideEditorPlus.addEventListener('click', function () {
+      if (!_controller.pluginer) return;
+      _controller.pluginer.open('fileBrowser', '/');
+   });
    ui.side.searcher.dom.view.innerHTML = 'Searcher';
    ui.side.plugins.dom.view.innerHTML = 'Plugins';
    ui.layout.dom.view.addEventListener('mousedown', function () {
@@ -82,18 +90,6 @@ function init_ui() {
          _controller.toggleSideTab();
       }
    });
-
-   /*
-   ui.editor = new EdienilnoEditor(document.createElement('div'));
-   ui.editor.self.style.height = '100%';
-   ui.editor.self.style.width = '100%';
-   ui.layout.dom.view.appendChild(ui.editor.self);
-   ui.editor.create('edienilno://test/1.js', 'function a() {}', {}, { readOnly: false });
-   ui.editor.on_content_load(function (uri) { return Promise.resolve(null);});
-   ui.editor.on_content_ready(function () {
-      ui.editor.resize();
-   });
-   */
 
    ui.controller = {};
    ui.controller.view = new edienilno.controller.View(ui.layout.dom.view);
@@ -131,9 +127,6 @@ function init_ui() {
    ui.titlenav.dom.menu.dom.self.style.height = '200px';
    ui.titlenav.switchTab('untitled');
 
-   // var test_item = new edienilno.SideItem('#', 'Space', 'This space has no description but this text is so long.');
-   // ui.controller.editorTab.getDom().appendChild(test_item.dom.self);
-
    _controller.client = new edienilno.WwbsocketClient('/ws');
    _controller.client.onOnline(function () {
       console.log('online');
@@ -152,10 +145,10 @@ function init_ui() {
       editorTab: ui.controller.editorTab
    });
    _controller.pluginer.register('fileBrowser', './js/component/plugin/file_browser.js');
-   _controller.pluginer.register('familyAccount', './js/component/plugin/family_account.js');
+   _controller.pluginer.register('familyAccount', './js/component/plugin/family_account.js', '.fyat');
    _controller.pluginer.register('codeEditor', './js/component/plugin/code_editor.js');
    waitForOnline(5000, function () {
-      _controller.pluginer.open('fileBrowser', '/');
+      _controller.pluginer.open('/', 'fileBrowser');
    });
 
    _controller.switchSideTab('editor');

@@ -34,7 +34,14 @@ function EdienilnoCodeEditor(id, filename) {
    this.hide();
 }
 EdienilnoCodeEditor.prototype = {
+   getPluginName: function () {
+      return plugin.name;
+   },
+   getFileName: function () {
+      return this.data.filename;
+   },
    resize: function () {
+      if (!this.editor) return;
       this.editor.resize();
    },
    show: function () {

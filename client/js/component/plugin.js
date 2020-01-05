@@ -10,6 +10,13 @@ var system = {
    plugins: {}
 };
 
+function extname(filename) {
+   if (!filename) return '';
+   var i = filename.lastIndexOf('.');
+   if (i < 0) return '';
+   return filename.substring(i);
+}
+
 /*
 plugin = {
    _create: function () { return plugin.api; },
@@ -77,18 +84,28 @@ function EdienilnoPluginManager(bundle) {
    this.loaded = {};
 }
 EdienilnoPluginManager.prototype = {
-   register: function (pluginName, path) {
-      this.map[pluginName] = path;
+   register: function (pluginName, path, extList) {
+      this.map[pluginName] = {
+         path: path,
+         ext: extList || []
+      };
    },
-   open: function (pluginName, filename) {
+   open: function (filename, pluginName) {
       var _this = this;
+      if (!pluginName) {
+         var ext = extname(filename);
+         pluginName = Object.keys(this.map).filter(function (name) {
+            var list = _this.map[name].ext;
+            return list && list.indexOf(ext) >= 0;
+         })[0];
+      }
       var plugin = this.loaded[pluginName];
-      if (_goto_if_opened(filename)) return;
+      if (_goto_if_opened(filename, pluginName)) return;
       if (plugin) {
          _open(plugin, filename);
       } else if (this.map[pluginName]) {
          edienilnoLoadPlugin(
-            pluginName, this.map[pluginName], this.bundle
+            pluginName, this.map[pluginName].path, this.bundle
          ).then(function (plugin) {
             _this.loaded[pluginName] = plugin;
             _open(plugin, filename);
@@ -98,11 +115,13 @@ EdienilnoPluginManager.prototype = {
          // no such plugin
       }
 
-      function _goto_if_opened(filename) {
+      function _goto_if_opened(filename, pluginName) {
          var editors = _this.bundle.view.editors;
          var such = Object.keys(editors).filter(function (key) {
             var editor = editors[key];
             var opened = editor.getFileName && editor.getFileName();
+            var ePluginName = editor.getPluginName && editor.getPluginName();
+            if (ePluginName && ePluginName !== pluginName) return false;
             return opened === filename;
          });
          if (such.length > 0) {

@@ -81,7 +81,7 @@ function init_ui() {
    ui.side.editor.dom.view.appendChild(ui.btn.sideEditorPlus);
    ui.btn.sideEditorPlus.addEventListener('click', function () {
       if (!_controller.pluginer) return;
-      _controller.pluginer.open('fileBrowser', '/');
+      _controller.pluginer.open('/', 'fileBrowser');
    });
    ui.side.searcher.dom.view.innerHTML = 'Searcher';
    ui.side.plugins.dom.view.innerHTML = 'Plugins';

@@ -10,9 +10,9 @@ function EdienilnoSideNavLayout(parent) {
       side: document.createElement('div'),
       view: document.createElement('div')
    };
+   this.dom.side.style.backgroundColor = 'white';
    this.dom.self.style.height = '100%';
    this.dom.self.style.width = '100%';
-
    this.dom.self.style.backgroundColor = 'white';
 
    this.dom.self.appendChild(this.dom.nav);

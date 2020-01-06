@@ -3,9 +3,9 @@
 // @include common.js
 // @include monaco-editor/vs/loader.js
 
-require.config({ paths: {
-   'vs': './js/editor/vs',
-   'edienilno': './js/editor.js'
+window.require.config({ paths: {
+   vs: './js/editor/vs',
+   edienilno: './js/editor.js'
 }});
 
 (function (window, document) {
@@ -95,7 +95,7 @@ require.config({ paths: {
             _this.global = monaco;
             _this.api = monaco.editor.create(_this.self, options, {
                textModelService: modelService,
-               automaticLayout: true,
+               automaticLayout: true
             });
             modelService.createModelReference(monaco.Uri.parse(filename)).then(function (model) {
                if (model) model = model.object.textEditorModel;
@@ -195,7 +195,7 @@ require.config({ paths: {
       decoration_backup: function () {
          if (!this.api) return;
          var m = this.api.getModel();
-         let list = m.getAllDecorations();
+         var list = m.getAllDecorations();
          this._backup.decorations = list.map(function (x) { return x.id; });
       },
       decoration_restore: function () {
@@ -203,8 +203,8 @@ require.config({ paths: {
          if (!this._backup.decorations) return;
          this._backup.decorations = [];
          var m = this.api.getModel();
-         let list = m.getAllDecorations();
-         let map = {};
+         var list = m.getAllDecorations();
+         var map = {};
          this._backup.decorations.forEach(function (x) { map[x] = 1; });
          m.deltaDecorations(list.map(function (x) {
             return x.id;

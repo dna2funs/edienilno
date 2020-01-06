@@ -34,8 +34,6 @@ function EdienilnoFileBrowser(id, filename) {
    system.bundle.editorTab.getDom().appendChild(nav.dom.self);
    nav.dom.self.setAttribute('data-plugin', plugin.name);
    nav.dom.self.setAttribute('data-id', id);
-   this.hide();
-   this.load(filename);
 
    var _this = this;
    this.event = {
@@ -78,6 +76,9 @@ function EdienilnoFileBrowser(id, filename) {
    this.dom.self.appendChild(this.dom.list);
    this.dom.self.addEventListener('click', this.event.click);
    this.dom.btnClose.addEventListener('click', this.event.btnCloseClick);
+
+   this.hide();
+   this.load(filename);
 }
 EdienilnoFileBrowser.prototype = {
    _empty: function () {

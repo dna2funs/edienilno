@@ -50,8 +50,11 @@ function EdienilnoCodeEditor(id, filename) {
    if (!style) {
       style = document.createElement('style');
       style.appendChild(document.createTextNode(
-         '.code-editor-btn-close { postion: absolute; top: 2px; right: 16px; opacity: 0.1; background-color: white; border: 1px solid black; }\n' +
-         '.code-editor-btn-close:hover { opacity: 1; }\n'
+         '.code-editor-btn-close {' +
+            'postion:absolute; top:2px; right:16px; opacity:0.1;' +
+            'background-color:white; border:1px solid black;' +
+         '}\n' +
+         '.code-editor-btn-close:hover { opacity:1; }\n'
       ));
       document.getElementsByTagName('head')[0].appendChild(style);
    }
@@ -66,7 +69,6 @@ function EdienilnoCodeEditor(id, filename) {
    system.bundle.editorTab.getDom().appendChild(nav.dom.self);
    nav.dom.self.setAttribute('data-plugin', plugin.name);
    nav.dom.self.setAttribute('data-id', id);
-   // div.innerHTML = 'Hello "' + filename + '"!';
 
    this.editor = new window.EdienilnoEditor(div);
    this.editor.self.style.height = '100%';

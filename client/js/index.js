@@ -107,10 +107,6 @@ function init_ui() {
    ui.iconnav.pushTop('plugins', './images/plugin-line.svg', _event.nav.switchSideTab);
    ui.iconnav.pushBottom('settings', './images/cog-line.svg', _event.nav.showSettingsMenu);
    ui.iconnav.pushBottom('settings', './images/wifi-line.svg', _event.nav.connectIfOffline);
-   // for debug only
-   ui.iconnav.pushBottom('settings', './images/wifi-no-line.svg', function () {
-      _controller.client.disconnect();
-   });
    ui.iconnav.dom.topIcons[0].check();
 
    ui.icon = {};
@@ -155,6 +151,13 @@ function init_ui() {
    if (ui.layout.isNarrowMode()) {
       _controller.switchSideTab('editor');
    }
+
+   // for debug only
+   ui.iconnav.pushBottom('settings', './images/wifi-no-line.svg', function () {
+      _controller.client.disconnect();
+   });
+   _controller.pluginer.register('lab.dragAndDrop', './js/component/plugin/lab/dnd.js');
+   _controller.pluginer.open('@dnd', 'lab.dragAndDrop');
 
    function waitForOnline(timeout, fn) {
       var timestamp = new Date().getTime();

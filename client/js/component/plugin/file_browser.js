@@ -58,7 +58,7 @@ function EdienilnoFileBrowser(id, filename) {
          } // data-file
       },
       btnCloseClick: function (evt) {
-         system.bundle.view.dispose(_this.id);
+         api.close(_this.id);
       }
    };
    var tmp;
@@ -193,7 +193,6 @@ EdienilnoFileBrowser.prototype = {
 };
 
 var api = {
-   _ui: {},
    _instances: {},
    // initialize api on first load
    initialize: function (bundle) {
@@ -218,7 +217,10 @@ var api = {
    // render for file browser with a specified ID
    render: function (id) {},
    // close an instance
-   close: function (id) {}
+   close: function (id) {
+      delete api._instances[id];
+      system.bundle.view.dispose(id);
+   }
 };
 
 var plugin = {

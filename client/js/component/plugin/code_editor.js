@@ -41,7 +41,7 @@ function EdienilnoCodeEditor(id, filename) {
                   }
                );
             }
-            system.bundle.view.dispose(_this.id);
+            api.close(_this.id);
          }
       }
    };
@@ -129,7 +129,6 @@ EdienilnoCodeEditor.prototype = {
 };
 
 var api = {
-   _ui: {},
    _instances: {},
    _ready: false,
    // initialize api on first load
@@ -160,7 +159,10 @@ var api = {
    // render for file browser with a specified ID
    render: function (id) {},
    // close an instance
-   close: function (id) {}
+   close: function (id) {
+      system.bundle.view.dispose(id);
+      delete api._instances[id];
+   }
 };
 
 var plugin = {

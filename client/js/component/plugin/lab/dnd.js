@@ -80,9 +80,6 @@
       div.addEventListener('dragover', this.event.container.dragover);
       div.addEventListener('drop', this.event.container.drop);
 
-      this.mobiletouch = new PetalMobileInteraction({});
-      this.mobiletouch.bind(div);
-
       this.hide();
    }
    EdienilnoDragAndDropLab.prototype = {
@@ -110,7 +107,6 @@
          this.dom.box1.removeEventListener('dragend', this.event.obj.drop);
          this.dom.self.removeEventListener('dragover', this.event.container.dragover);
          this.dom.self.removeEventListener('drop', this.event.container.drop);
-         this.mobiletouch.unbind(this.dom.self);
          system.bundle.editorTab.getDom().removeChild(this.dom.nav.dom.self);
          system.bundle.view.getDom().removeChild(this.dom.self);
       }
@@ -122,7 +118,7 @@
       // initialize api on first load
       initialize: function (bundle) {
          system.bundle = bundle;
-         edienilno.loadScript('./js/3rd/petal-interactions.js').then(function () {
+         edienilno.loadScript('./js/3rd/DragDropTouch.js').then(function () {
             api._ready = true;
          });
       },

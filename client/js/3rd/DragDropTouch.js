@@ -1,4 +1,6 @@
 // copy from: https://github.com/Bernardo-Castilho/dragdroptouch/blob/master/DragDropTouch.js
+// modified by Seven Lju
+// - 2020.01.10 define scope to bind touch envents
 
 var dragDropTouch;
 (function (DragDropTouch_1) {
@@ -14,7 +16,8 @@ var dragDropTouch;
      * accessible through the @see:dataTransfer property of all drag events.
      */
     var DataTransfer = (function () {
-        function DataTransfer() {
+        function DataTransfer(binding) {
+            this._bind = binding;
             this._dropEffect = 'move';
             this._effectAllowed = 'all';
             this._data = {};
@@ -104,7 +107,7 @@ var dragDropTouch;
          * @param offsetY The vertical offset within the image.
          */
         DataTransfer.prototype.setDragImage = function (img, offsetX, offsetY) {
-            var ddt = DragDropTouch._instance;
+            var ddt = this._bind;
             ddt._imgCustom = img;
             ddt._imgOffset = { x: offsetX, y: offsetY };
         };
@@ -133,12 +136,9 @@ var dragDropTouch;
         /**
          * Initializes the single instance of the @see:DragDropTouch class.
          */
-        function DragDropTouch() {
+        function DragDropTouch(binding) {
+            this._bind = binding;
             this._lastClick = 0;
-            // enforce singleton pattern
-            if (DragDropTouch._instance) {
-                throw 'DragDropTouch instance already created.';
-            }
             // detect passive event support
             // https://github.com/Modernizr/Modernizr/issues/1894
             var supportsPassive = false;
@@ -150,19 +150,19 @@ var dragDropTouch;
             });
             // listen to touch events
             if ('ontouchstart' in document) {
-                var d = document, ts = this._touchstart.bind(this), tm = this._touchmove.bind(this), te = this._touchend.bind(this), opt = supportsPassive ? { passive: false, capture: false } : false;
+                var d = this._bind, ts = this._touchstart.bind(this), tm = this._touchmove.bind(this), te = this._touchend.bind(this), opt = supportsPassive ? { passive: false, capture: false } : false;
                 d.addEventListener('touchstart', ts, opt);
                 d.addEventListener('touchmove', tm, opt);
                 d.addEventListener('touchend', te);
                 d.addEventListener('touchcancel', te);
+                this.dispose = function () {
+                    d.removeEventListener('touchstart', ts, opt);
+                    d.removeEventListener('touchmove', tm, opt);
+                    d.removeEventListener('touchend', te);
+                    d.removeEventListener('touchcancel', te);
+                };
             }
         }
-        /**
-         * Gets a reference to the @see:DragDropTouch singleton.
-         */
-        DragDropTouch.getInstance = function () {
-            return DragDropTouch._instance;
-        };
         // ** event handlers
         DragDropTouch.prototype._touchstart = function (e) {
             var _this = this;
@@ -304,7 +304,7 @@ var dragDropTouch;
             this._ptDown = null;
             this._isDragEnabled = false;
             this._isDropZone = false;
-            this._dataTransfer = new DataTransfer();
+            this._dataTransfer = new DataTransfer(this);
             clearInterval(this._pressHoldInterval);
         };
         // get point for a touch event
@@ -429,7 +429,6 @@ var dragDropTouch;
         };
         return DragDropTouch;
     }());
-    /*private*/ DragDropTouch._instance = new DragDropTouch(); // singleton
     // constants
     DragDropTouch._THRESHOLD = 5; // pixels to move before drag starts
     DragDropTouch._OPACITY = 0.5; // drag image opacity

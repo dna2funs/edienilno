@@ -79,6 +79,7 @@
       this.dom.box1.addEventListener('dragend', this.event.obj.drop);
       div.addEventListener('dragover', this.event.container.dragover);
       div.addEventListener('drop', this.event.container.drop);
+      this.mobildeDragDrop = new window.dragDropTouch.DragDropTouch(div);
 
       this.hide();
    }
@@ -107,6 +108,7 @@
          this.dom.box1.removeEventListener('dragend', this.event.obj.drop);
          this.dom.self.removeEventListener('dragover', this.event.container.dragover);
          this.dom.self.removeEventListener('drop', this.event.container.drop);
+         this.mobildeDragDrop.dispose();
          system.bundle.editorTab.getDom().removeChild(this.dom.nav.dom.self);
          system.bundle.view.getDom().removeChild(this.dom.self);
       }

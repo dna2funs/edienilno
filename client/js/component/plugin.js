@@ -123,7 +123,9 @@ EdienilnoPluginManager.prototype = {
       if (!pluginName) {
          var ext = extname(filename);
          pluginName = Object.keys(this.map).filter(function (name) {
-            var list = _this.map[name].ext;
+            var map = _this.map[name];
+            var list = map.ext;
+            if (list && list.indexOf(':default') >= 0) return true;
             return list && list.indexOf(ext) >= 0;
          })[0];
       }

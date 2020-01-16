@@ -37,11 +37,14 @@ function EdienilnoSimpleEditor(id, filename) {
       click: {
          btnClose: function () {
             if (_this.data.changed) {
+               var value = _this.dom.txt.value;
+               _this.dom.txt.classList.add('disabled');
+               _this.dom.txt.value = 'Saving ...';
                system.bundle.client.request(
                   {
                      cmd: 'simpleEdit.save',
                      path: _this.data.filename,
-                     data: _this.dom.txt.value
+                     data: value
                   },
                   function () {
                      alert('Saved: ' + _this.data.filename);
@@ -55,6 +58,7 @@ function EdienilnoSimpleEditor(id, filename) {
 
    this.dom.txt.style.width = '100%';
    this.dom.txt.style.height = '100%';
+   this.dom.txt.value = 'Loading ...';
    this.dom.txt.classList.add('disabled');
 
    this.dom.btnClose.innerHTML = '&times;';
@@ -71,7 +75,6 @@ function EdienilnoSimpleEditor(id, filename) {
          if (!data.data) data.data = '';
          _this.dom.txt.value = data.data;
          _this.dom.txt.classList.remove('disabled');
-         alert('Load: ' + _this.data.filename);
       }
    );
    div.style.width = '100%';

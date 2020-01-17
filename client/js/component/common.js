@@ -91,11 +91,11 @@ EdienilnoScrollableView.prototype = {
 };
 
 function EdienilnoDropdownView(stick_to) {
-   this.id = EdienilnoPseudoId(100);
    var div = document.createElement('div');
    this.dom = {
       self: div,
-      stick_to: stick_to
+      stick_to: stick_to,
+      mask: null
    };
    if (stick_to) {
       stick_to.setAttribute('data-dropdown-id', this.id);
@@ -106,16 +106,10 @@ function EdienilnoDropdownView(stick_to) {
    var _this = this;
    this.event = {
       mouseDown: function (evt) {
-         var cur = evt.target;
-         do {
-            var id = cur.getAttribute('data-dropdown-id');
-            if (id === _this.id) return;
-            cur = cur.parentNode;
-         } while (cur && cur !== document.body);
+console.log('test');
          _this.hide();
       }
    };
-   document.body.addEventListener('mousedown', this.event.mouseDown);
 
    div.style.position = 'absolute';
    div.style.top = '0';
@@ -128,7 +122,14 @@ function EdienilnoDropdownView(stick_to) {
 }
 EdienilnoDropdownView.prototype = {
    dispose: function () {
-      document.body.removeEventListener('mousedown', this.event.mouseDown);
+      if (this.dom.mask) {
+         this.dom.mask.removeEventListener('mousedown', this.event.mouseDown);
+         if (this.dom.mask.parentNode) this.dom.mask.parentNode.removeChild(this.dom.mask);
+         this.dom.mask = null;
+      }
+      if (this.dom.self.parentNode) {
+         this.dom.self.parentNode.removeChild(this.dom.self);
+      }
    },
    stick: function () {
       if (!this.dom.stick_to) return;
@@ -145,10 +146,27 @@ EdienilnoDropdownView.prototype = {
    },
    show: function () {
       this.dom.self.style.display = 'block';
+      if (!this.dom.mask) {
+         this.dom.mask = document.createElement('div');
+         this.dom.mask.style.position = 'fixed';
+         this.dom.mask.style.width = '100%';
+         this.dom.mask.style.height = '100%';
+         this.dom.mask.style.top = '0px';
+         this.dom.mask.style.left = '0px';
+         this.dom.mask.style.backgroundColor = 'transparent';
+         this.dom.mask.style.zIndex = '2000';
+      }
+      document.body.appendChild(this.dom.mask);
+      this.dom.mask.addEventListener('mousedown', this.event.mouseDown);
       this.displayed = true;
    },
    hide: function () {
       this.dom.self.style.display = 'none';
+      if (this.dom.mask) {
+         this.dom.mask.removeEventListener('mousedown', this.event.mouseDown);
+         if (this.dom.mask.parentNode) this.dom.mask.parentNode.removeChild(this.dom.mask);
+         this.dom.mask = null;
+      }
       this.displayed = false;
    }
 };

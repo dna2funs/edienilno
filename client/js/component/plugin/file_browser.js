@@ -149,6 +149,7 @@ EdienilnoFileBrowser.prototype = {
          div.setAttribute('data-file', path);
       }
       div.style.cursor = 'pointer';
+      div.setAttribute('draggable', 'true');
       div.appendChild(document.createTextNode(path));
       this.dom.list.appendChild(div);
    },

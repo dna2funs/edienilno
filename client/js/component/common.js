@@ -106,7 +106,6 @@ function EdienilnoDropdownView(stick_to) {
    var _this = this;
    this.event = {
       mouseDown: function (evt) {
-console.log('test');
          _this.hide();
       }
    };
@@ -131,7 +130,8 @@ EdienilnoDropdownView.prototype = {
          this.dom.self.parentNode.removeChild(this.dom.self);
       }
    },
-   stick: function () {
+   stick: function (stick_to) {
+      if (stick_to) this.dom.stick_to = stick_to;
       if (!this.dom.stick_to) return;
       this.dom.self.style.top = (this.dom.stick_to.offsetTop + this.dom.stick_to.offsetHeight + this.dy) + 'px';
       this.dom.self.style.left = (this.dom.stick_to.offsetLeft + this.dx) + 'px';
@@ -140,6 +140,9 @@ EdienilnoDropdownView.prototype = {
       this.dx = dx;
       this.dy = dy;
       this.stick();
+   },
+   getDom: function () {
+      return this.dom.self;
    },
    isVisible: function () {
       return this.displayed;
@@ -157,6 +160,7 @@ EdienilnoDropdownView.prototype = {
          this.dom.mask.style.zIndex = '2000';
       }
       document.body.appendChild(this.dom.mask);
+      document.activeElement.blur();
       this.dom.mask.addEventListener('mousedown', this.event.mouseDown);
       this.displayed = true;
    },

@@ -368,6 +368,10 @@ function actionDownload(_this) {
    console.log('TODO: download');
 }
 
+function actionShare(_this) {
+   console.log('TODO: share');
+}
+
 function createItemMenu(parent) {
    var menu = new edienilno.DropdownView();
    var div = document.createElement('div');
@@ -378,6 +382,15 @@ function createItemMenu(parent) {
    item.innerHTML = 'Download';
    item.setAttribute('data-type', 'item-action');
    item.setAttribute('data-action', 'download');
+   div.appendChild(item);
+   item = document.createElement('div');
+   item.className = 'dropdown-item';
+   item.innerHTML = 'Share';
+   item.setAttribute('data-type', 'item-action');
+   item.setAttribute('data-action', 'share');
+   div.appendChild(item);
+   item = document.createElement('div');
+   item.className = 'dropdown-divider';
    div.appendChild(item);
    item = document.createElement('div');
    item.className = 'dropdown-item';
@@ -632,6 +645,9 @@ function EdienilnoFileBrowser(id, filename) {
                   break;
                case 'download':
                   actionDownload(_this);
+                  break;
+               case 'share':
+                  actionShare(_this);
                   break;
             }
          }

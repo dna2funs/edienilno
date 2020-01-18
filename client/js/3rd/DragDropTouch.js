@@ -161,6 +161,8 @@ var dragDropTouch;
                     d.removeEventListener('touchend', te);
                     d.removeEventListener('touchcancel', te);
                 };
+            } else {
+                this.dispose = function () {};
             }
         }
         // ** event handlers

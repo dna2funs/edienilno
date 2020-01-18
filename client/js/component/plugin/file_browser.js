@@ -42,21 +42,25 @@ function createItemMenu(parent) {
    item.className = 'dropdown-item';
    item.innerHTML = 'Rename';
    item.setAttribute('data-type', 'item-action');
+   item.setAttribute('data-action', 'rename');
    div.appendChild(item);
    item = document.createElement('div');
    item.className = 'dropdown-item';
    item.innerHTML = 'Cut';
    item.setAttribute('data-type', 'item-action');
+   item.setAttribute('data-action', 'cut');
    div.appendChild(item);
    item = document.createElement('div');
    item.className = 'dropdown-item';
    item.innerHTML = 'Copy';
    item.setAttribute('data-type', 'item-action');
+   item.setAttribute('data-action', 'copy');
    div.appendChild(item);
    item = document.createElement('div');
    item.className = 'dropdown-item';
    item.innerHTML = 'Delete';
    item.setAttribute('data-type', 'item-action');
+   item.setAttribute('data-action', 'delete');
    div.appendChild(item);
    var component = menu.getDom();
    component.appendChild(div);
@@ -127,10 +131,13 @@ function EdienilnoFileBrowser(id, filename) {
             if (type !== 'item-menu') return;
             var item = getItemByMenuOject(evt.target);
             _this.data.selected = {
+               isDir: !!item.getAttribute('data-folder'),
+               isFile: !!item.getAttribute('data-file'),
+               dirname: _this.data.filename,
+               basename: item.getAttribute('data-folder') || item.getAttribute('data-file'),
                filename: _this.data.filename + (item.getAttribute('data-folder') || item.getAttribute('data-file')) 
             };
             _this.dom.menu.item.stick(evt.target);
-            // TODO: if top + height > conatiner.height: do menu.item.offset(...)
             _this.dom.menu.item.show();
             var menuDom = _this.dom.menu.item.getDom();
             var menuH = menuDom.children[0].offsetHeight, menuY = menuDom.offsetTop;
@@ -139,6 +146,85 @@ function EdienilnoFileBrowser(id, filename) {
                var top = menuY - menuH;
                if (_this.dom.menu.item.dom.stick_to) top -= _this.dom.menu.item.dom.stick_to.offsetHeight;
                menuDom.style.top = top + 'px';
+            }
+         },
+         menuItemClick: function (evt) {
+            var type = recognize(evt.target);
+            if (type !== 'item-action') return;
+            var action = evt.target.getAttribute('data-action');
+            var dialog;
+            console.log(action);
+            _this.dom.menu.item.hide();
+            switch(action) {
+               case 'rename':
+                  dialog = new edienilno.InputBox({
+                     titleText: 'Rename',
+                     bodyText: 'Type a new name:',
+                     okStyle: 'btn btn-success',
+                     inputValue: _this.data.selected.basename.split('/')[0],
+                     okFn: function () {
+                        var selected = _this.data.selected;
+                        var path = selected.filename;
+                        if (path.endsWith('/')) path = path.substring(0, path.length-1);
+                        var newpath = dialog.getValue();
+                        if (/[`!@&*\\|?/><:]/.test(newpath)) {
+                           alert('invalid filename');
+                           return;
+                        }
+                        newpath = _this.data.filename + newpath;
+                        system.bundle.client.request(
+                           {
+                              cmd: 'fileBrowser.move',
+                              path: path,
+                              newpath: newpath
+                           },
+                           function (obj) {
+                              dialog.dispose();
+                              if (obj.error) {
+                                 alert('failed to rename ...');
+                              } else {
+                                 _this.load(_this.data.filename);
+                              }
+                           }
+                        );
+                        _this.data.selected = null;
+                     },
+                     cancelFn: function () { dialog.dispose(); }
+                  });
+                  dialog.act();
+                  break;
+               case 'cut':
+                  break;
+               case 'copy':
+                  break;
+               case 'delete':
+                  dialog = new edienilno.YesNoCancelBox({
+                     titleText: 'Delete',
+                     bodyText: 'Confirm to delete the file of "' + _this.data.selected.basename + '"',
+                     yesTitle: 'OK',
+                     yesStyle: 'btn btn-danger',
+                     cancelTitle: 'Cancel',
+                     yesFn: function () {
+                        var selected = _this.data.selected;
+                        system.bundle.client.request(
+                           {
+                              cmd: 'fileBrowser.delete',
+                              path: selected.filename
+                           },
+                           function (obj) {
+                              dialog.dispose();
+                              if (obj.error) {
+                                 alert('failed to delete ...');
+                              } else {
+                                 _this.load(_this.data.filename);
+                              }
+                           }
+                        );
+                        _this.data.selected = null;
+                     },
+                     cancelFn: function () { dialog.dispose(); }
+                  });
+                  dialog.act();
             }
          }
       },
@@ -170,6 +256,7 @@ function EdienilnoFileBrowser(id, filename) {
    this.dom.self.addEventListener('click', this.event.click);
    this.dom.self.addEventListener('click', this.event.item.menuClick);
    this.dom.btnClose.addEventListener('click', this.event.btnCloseClick);
+   this.dom.menu.item.getDom().addEventListener('click', this.event.item.menuItemClick);
 
    this.hide();
    this.load(filename);
@@ -298,6 +385,7 @@ EdienilnoFileBrowser.prototype = {
    },
    dispose: function () {
       this.mobildeDragDrop.dispose();
+      this.dom.menu.item.removeEventListener('click', this.event.item.menuItemClick);
       this.dom.btnClose.removeEventListener('click', this.event.btnCloseClick);
       this.dom.self.removeEventListener('click', this.event.item.menuClick);
       this.dom.self.removeEventListener('click', this.event.click);

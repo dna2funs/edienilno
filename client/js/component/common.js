@@ -2,6 +2,18 @@
 
 (function () {
 
+var _event = {
+   preventDefault: function (evt) { evt.preventDefault(); },
+   disableBodyKey: function () {
+      document.body.addEventListener('keydown', _event.preventDefault);
+      document.body.addEventListener('keyup', _event.preventDefault);
+   },
+   enableBodyKey: function () {
+      document.body.removeEventListener('keydown', _event.preventDefault);
+      document.body.removeEventListener('keyup', _event.preventDefault);
+   }
+};
+
 function EdienilnoPseudoId(N) {
    var random = ~~(Math.random() * N)
    var timestamp = ~~(new Date().getTime());
@@ -102,6 +114,11 @@ function EdienilnoDropdownView(stick_to) {
    }
    div.setAttribute('data-dropdown-id', this.id);
    div.style.backgroundColor = 'white';
+   this.data = {
+      cancelByMaskClick: true,
+      maskOpacity: 1,
+      maskColor: 'transparent'
+   };
 
    var _this = this;
    this.event = {
@@ -121,11 +138,7 @@ function EdienilnoDropdownView(stick_to) {
 }
 EdienilnoDropdownView.prototype = {
    dispose: function () {
-      if (this.dom.mask) {
-         this.dom.mask.removeEventListener('mousedown', this.event.mouseDown);
-         if (this.dom.mask.parentNode) this.dom.mask.parentNode.removeChild(this.dom.mask);
-         this.dom.mask = null;
-      }
+      if (this.dom.mask) this.hide();
       if (this.dom.self.parentNode) {
          this.dom.self.parentNode.removeChild(this.dom.self);
       }
@@ -147,6 +160,16 @@ EdienilnoDropdownView.prototype = {
    isVisible: function () {
       return this.displayed;
    },
+   maskStyle: function (color, opacity) {
+      this.data.maskColor = color || 'transparent';
+      this.data.maskOpacity = opacity;
+   },
+   disableCancelByMaskClick: function () {
+      this.data.cancelByMaskClick = false;
+   },
+   enableCancelByMaskClick: function () {
+      this.data.cancelByMaskClick = true;
+   },
    show: function () {
       this.dom.self.style.display = 'block';
       if (!this.dom.mask) {
@@ -156,12 +179,13 @@ EdienilnoDropdownView.prototype = {
          this.dom.mask.style.height = '100%';
          this.dom.mask.style.top = '0px';
          this.dom.mask.style.left = '0px';
-         this.dom.mask.style.backgroundColor = 'transparent';
+         this.dom.mask.style.backgroundColor = this.data.maskColor;
+         if (this.data.maskOpacity !== undefined) this.dom.mask.style.opacity = this.data.maskOpacity;
          this.dom.mask.style.zIndex = '2000';
       }
       document.body.appendChild(this.dom.mask);
       document.activeElement.blur();
-      this.dom.mask.addEventListener('mousedown', this.event.mouseDown);
+      if (this.data.cancelByMaskClick) this.dom.mask.addEventListener('mousedown', this.event.mouseDown);
       this.displayed = true;
    },
    hide: function () {
@@ -175,10 +199,172 @@ EdienilnoDropdownView.prototype = {
    }
 };
 
+function EdienilnoInputBox(options) {
+   if (!options) options = {};
+
+   this.dom = {
+      self: new EdienilnoDropdownView(document.body),
+      title: document.createElement('div'),
+      body: document.createElement('div'),
+      input: document.createElement('input'),
+      btn: {
+         ok: document.createElement('button'),
+         cancel: options.cancelFn && document.createElement('button')
+      }
+   };
+
+   var _this = this;
+   this.event = {
+      okFn: options.okFn || function (evt) {
+         _this.dispose();
+      },
+      cancelFn: options.cancelFn
+   };
+   this.dom.self.maskStyle('white', '0.5');
+   var container = this.dom.self.getDom();
+   if (options.titleText) {
+      this.dom.title.appendChild(document.createTextNode(options.titleText));
+   } else if (options.titleHtml) {
+      this.dom.title.innerHTML = options.titleHtml;
+   } else {
+      this.dom.title.innerHTML = 'Message';
+   }
+   container.appendChild(this.dom.title);
+   if (options.bodyText) {
+      this.dom.body.appendChild(document.createTextNode(options.bodyText));
+   } else if (options.bodyHtml) {
+      this.dom.body.innerHTML = options.bodyHtml;
+   } else {
+      this.dom.body.innerHTML = '';
+   }
+   container.appendChild(this.dom.body);
+   var tmp = document.createElement('div');
+   tmp.appendChild(this.dom.input);
+   this.dom.input.value = options.inputValue || '';
+   this.dom.input.className = options.inputStyle || 'input clr-input';
+   container.appendChild(tmp);
+   this.dom.self.disableCancelByMaskClick();
+   this.dom.btn.ok.addEventListener('click', this.event.okFn);
+   this.dom.btn.ok.innerHTML = options.okTitle || 'OK';
+   this.dom.btn.ok.className = options.okStyle || 'btn btn-default';
+   container.appendChild(this.dom.btn.ok);
+   if (this.event.cancelFn) {
+      this.dom.btn.cancel.addEventListener('click', this.event.cancelFn);
+      this.dom.btn.cancel.innerHTML = 'Cancel';
+      this.dom.btn.cancel.className = options.cancelStyle || 'btn btn-default';
+      container.appendChild(this.dom.btn.cancel);
+   }
+   container.style.maxWidth = '50%';
+   container.style.border = '1px solid black';
+   container.style.padding = '5px';
+}
+EdienilnoInputBox.prototype = {
+   dispose: function () {
+      this.dom.btn.ok.removeEventListener('click', this.event.okFn);
+      this.event.cacnelFn && this.dom.btn.cancel.removeEventListener('click', this.event.cancelFn);
+      this.dom.self.dispose();
+   },
+   getValue: function () {
+      return this.dom.input.value;
+   },
+   act: function () {
+      document.body.appendChild(this.dom.self.getDom());
+      this.dom.self.show();
+      var w = window.innerWidth, h = window.innerHeight;
+      var container = this.dom.self.getDom();
+      container.style.left = (~~((w - container.offsetWidth) / 2)) + 'px';
+      container.style.top = (~~((h - container.offsetHeight) / 2)) + 'px';
+      this.dom.input.focus();
+   }
+};
+
+function EdienilnoYesNoCancelBox(options) {
+   if (!options) options = {};
+
+   this.dom = {
+      self: new EdienilnoDropdownView(document.body),
+      title: document.createElement('div'),
+      body: document.createElement('div'),
+      btn: {
+         yes: document.createElement('button'),
+         no: options.noFn && document.createElement('button'),
+         cancel: options.cancelFn && document.createElement('button')
+      }
+   };
+
+   var _this = this;
+   this.event = {
+      yesFn: options.yesFn || function (evt) {
+         _this.dispose();
+      },
+      noFn: options.noFn,
+      cancelFn: options.cancelFn
+   };
+   this.dom.self.maskStyle('white', '0.5');
+   var container = this.dom.self.getDom();
+   if (options.titleText) {
+      this.dom.title.appendChild(document.createTextNode(options.titleText));
+   } else if (options.titleHtml) {
+      this.dom.title.innerHTML = options.titleHtml;
+   } else {
+      this.dom.title.innerHTML = 'Message';
+   }
+   container.appendChild(this.dom.title);
+   if (options.bodyText) {
+      this.dom.body.appendChild(document.createTextNode(options.bodyText));
+   } else if (options.bodyHtml) {
+      this.dom.body.innerHTML = options.bodyHtml;
+   } else {
+      this.dom.body.innerHTML = '';
+   }
+   container.appendChild(this.dom.body);
+   this.dom.self.disableCancelByMaskClick();
+   this.dom.btn.yes.addEventListener('click', this.event.yesFn);
+   this.dom.btn.yes.innerHTML = options.yesTitle || 'Yes';
+   this.dom.btn.yes.className = options.yesStyle || 'btn btn-default';
+   if (!options.yesTitle && !options.yesFn) {
+      this.dom.btn.yes.innerHTML = 'OK';
+   }
+   container.appendChild(this.dom.btn.yes);
+   if (this.event.noFn) {
+      this.dom.btn.no.addEventListener('click', this.event.noFn);
+      this.dom.btn.no.innerHTML = 'No';
+      this.dom.btn.no.className = options.noStyle || 'btn btn-default';
+      container.appendChild(this.dom.btn.no);
+   }
+   if (this.event.cancelFn) {
+      this.dom.btn.cancel.addEventListener('click', this.event.cancelFn);
+      this.dom.btn.cancel.innerHTML = 'Cancel';
+      this.dom.btn.cancel.className = options.cancelStyle || 'btn btn-default';
+      container.appendChild(this.dom.btn.cancel);
+   }
+   container.style.maxWidth = '50%';
+   container.style.border = '1px solid black';
+   container.style.padding = '5px';
+}
+EdienilnoYesNoCancelBox.prototype = {
+   dispose: function () {
+      this.dom.btn.yes.removeEventListener('click', this.event.yesFn);
+      this.event.noFn && this.dom.btn.no.removeEventListener('click', this.event.noFn);
+      this.event.cacnelFn && this.dom.btn.cancel.removeEventListener('click', this.event.cancelFn);
+      this.dom.self.dispose();
+   },
+   act: function () {
+      document.body.appendChild(this.dom.self.getDom());
+      this.dom.self.show();
+      var w = window.innerWidth, h = window.innerHeight;
+      var container = this.dom.self.getDom();
+      container.style.left = (~~((w - container.offsetWidth) / 2)) + 'px';
+      container.style.top = (~~((h - container.offsetHeight) / 2)) + 'px';
+   }
+};
+
 if (!window.edienilno) window.edienilno = {};
 window.edienilno.pseudoId = EdienilnoPseudoId;
 window.edienilno.SideItem = EdienilnoSideItem;
 window.edienilno.ScrollableView = EdienilnoScrollableView;
 window.edienilno.DropdownView = EdienilnoDropdownView;
+window.edienilno.InputBox = EdienilnoInputBox;
+window.edienilno.YesNoCancelBox = EdienilnoYesNoCancelBox;
 
 })();

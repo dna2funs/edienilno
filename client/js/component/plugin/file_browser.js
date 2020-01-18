@@ -18,6 +18,7 @@ function recognize(object) {
       if (object.getAttribute('data-file')) return 'file';
       switch(object.getAttribute('data-type')) {
          case 'item-menu': return 'item-menu';
+         case 'item-action': return 'item-action';
       }
       return 'dom';
    }
@@ -40,18 +41,22 @@ function createItemMenu(parent) {
    item = document.createElement('div');
    item.className = 'dropdown-item';
    item.innerHTML = 'Rename';
+   item.setAttribute('data-type', 'item-action');
    div.appendChild(item);
    item = document.createElement('div');
    item.className = 'dropdown-item';
    item.innerHTML = 'Cut';
+   item.setAttribute('data-type', 'item-action');
    div.appendChild(item);
    item = document.createElement('div');
    item.className = 'dropdown-item';
    item.innerHTML = 'Copy';
+   item.setAttribute('data-type', 'item-action');
    div.appendChild(item);
    item = document.createElement('div');
    item.className = 'dropdown-item';
    item.innerHTML = 'Delete';
+   item.setAttribute('data-type', 'item-action');
    div.appendChild(item);
    var component = menu.getDom();
    component.appendChild(div);
@@ -125,7 +130,16 @@ function EdienilnoFileBrowser(id, filename) {
                filename: _this.data.filename + (item.getAttribute('data-folder') || item.getAttribute('data-file')) 
             };
             _this.dom.menu.item.stick(evt.target);
+            // TODO: if top + height > conatiner.height: do menu.item.offset(...)
             _this.dom.menu.item.show();
+            var menuDom = _this.dom.menu.item.getDom();
+            var menuH = menuDom.children[0].offsetHeight, menuY = menuDom.offsetTop;
+            var containerH = _this.dom.self.parentNode.offsetHeight;
+            if (menuY + menuH > containerH) {
+               var top = menuY - menuH;
+               if (_this.dom.menu.item.dom.stick_to) top -= _this.dom.menu.item.dom.stick_to.offsetHeight;
+               menuDom.style.top = top + 'px';
+            }
          }
       },
       itemContainer: {

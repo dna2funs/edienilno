@@ -106,25 +106,173 @@ function actionNewFile(_this) {
 }
 
 function actionCopy(_this) {
+   var selected = _this.data.selected;
+   _this.data.selected = null;
+   if (selected.basename.endsWith('/')) {
+      alert('Not yet support copying folder.');
+      return;
+   }
    _this.data.copycut.push(
       _this.data.filename,
-      _this.data.selected.basename.split('/')[0],
+      selected.basename,
       'copy'
    );
    _this.render();
 }
 
 function actionCut(_this) {
+   var selected = _this.data.selected;
+   _this.data.selected = null;
    _this.data.copycut.push(
       _this.data.filename,
-      _this.data.selected.basename.split('/')[0],
+      selected.basename,
       'cut'
    );
    _this.render();
 }
 
 function actionPaste(_this) {
-   console.log('TODO: paste');
+   var filemap = {};
+   _this.data.filelist.forEach(function (item) { filemap[item.path] = 1; });
+   var file_list = _this.data.copycut.getAll();
+   file_list = file_list && file_list.filter(function (item) {
+      if (item.dirpath !== _this.data.filename || !filemap[item.basename]) return true;
+      if (item.type !== 'cut') return true;
+      return false;
+   });
+   if (!file_list || !file_list.length) {
+      alert('No available files for pasting.');
+      return;
+   }
+   var pasteMask = document.createElement('div');
+   var pasteList = document.createElement('div');
+   var btnBack = document.createElement('div');
+   btnBack.innerHTML = 'Cancel';
+   btnBack.className = 'xitem-btn xitem-orange';
+   btnBack.style.width = '100%';
+   pasteList.appendChild(btnBack);
+   file_list.forEach(function (item) {
+      var div = document.createElement('div');
+      div.classList.add('xitem');
+      div.style.display = 'flex';
+      var actionbar = document.createElement('span');
+      actionbar.style.flex = '0 1 auto';
+      actionbar.style.marginRight = '2px';
+      var btn;
+      btn = document.createElement('button');
+      btn.style.border = '0px';
+      btn.style.background = 'transparent';
+      btn.setAttribute('data-dirpath', item.dirpath);
+      btn.setAttribute('data-name', item.basename);
+      if (item.type === 'copy') {
+         btn.innerHTML = 'Copy';
+         btn.setAttribute('data-type', 'item-copy-paste');
+      } else {
+         btn.innerHTML = 'Move';
+         btn.setAttribute('data-type', 'item-cut-paste');
+      }
+      actionbar.appendChild(btn);
+      var name = document.createElement('span');
+      name.style.flex = '1 1 auto';
+      name.style.textOverflow = 'ellipsis';
+      name.style.overflow = 'hidden';
+      name.style.whiteSpace = 'nowrap';
+      div.appendChild(actionbar);
+      div.appendChild(name);
+      div.style.cursor = 'pointer';
+      div.setAttribute('draggable', 'true');
+      name.appendChild(document.createTextNode(item.dirpath + item.basename));
+      if (item.basename.endsWith('/')) {
+         div.classList.add('xitem-purple');
+      } else {
+         div.classList.add('xitem-blue');
+      }
+      pasteList.appendChild(div);
+   });
+   _this.dom.self.appendChild(pasteList);
+   pasteMask.style.position = 'absolute';
+   pasteMask.style.opacity = 0.5;
+   pasteMask.style.backgroundColor = 'white';
+   pasteMask.style.top = '0px';
+   pasteMask.style.left = '0px';
+   pasteMask.style.width = '100%';
+   pasteMask.style.height = pasteList.offsetTop + 'px';
+   pasteMask.style.zIndex = '1999'; // make sure dialog 2000, 2001 on the top
+   _this.dom.self.appendChild(pasteMask);
+
+   var _event = {
+      click: {
+         btnBack: function (evt) {
+            evt && evt.stopPropagation && evt.stopPropagation();
+            btnBack.removeEventListener('click', _event.click.btnBack);
+            pasteList.removeEventListener('click', _event.click.btnPaste);
+            pasteMask.parentNode.removeChild(pasteMask);
+            pasteList.parentNode.removeChild(pasteList);
+         },
+         btnPaste: function (evt) {
+            var dirpath = evt.target.getAttribute('data-dirpath');
+            if (!dirpath) return;
+            var name = evt.target.getAttribute('data-name');
+            if (!name) return;
+            var type = recognize(evt.target);
+            var parts = name.split('.');
+            if (name.endsWith('/')) {
+               parts = [name.substring(0, name.length-1), '/'];
+            } else if (parts.length === 1) {
+               parts = [parts[0], ''];
+            } else {
+               parts = [parts.slice(0, parts.length-1).join('.'), '.' + parts[parts.length-1]];
+            }
+            var index = 2;
+            var newname = name;
+            while (filemap[newname] || filemap[newname + '/']) {
+               newname = parts[0] + '_' + index + parts[1];
+               index ++;
+            }
+            var newpath = _this.data.filename + newname;
+            switch(type) {
+               case 'item-copy-paste':
+                  system.bundle.client.request(
+                     {
+                        cmd: 'fileBrowser.copy',
+                        path: dirpath + name,
+                        newpath: newpath
+                     },
+                     function (obj) {
+                        if (obj.error) {
+                           alert('failed to copy (copy-paste) ...');
+                        } else {
+                           _this.data.copycut.pop(dirpath, name);
+                           _this.load(_this.data.filename);
+                           _event.click.btnBack();
+                        }
+                     }
+                  );
+                  break;
+               case 'item-cut-paste':
+                  system.bundle.client.request(
+                     {
+                        cmd: 'fileBrowser.move',
+                        path: dirpath + name,
+                        newpath: newpath
+                     },
+                     function (obj) {
+                        if (obj.error) {
+                           alert('failed to move (cut-paste) ...');
+                        } else {
+                           _this.data.copycut.pop(dirpath, name);
+                           _this.load(_this.data.filename);
+                           _event.click.btnBack();
+                        }
+                     }
+                  );
+                  break;
+            }
+         }
+      }
+   };
+   btnBack.addEventListener('click', _event.click.btnBack);
+   pasteList.addEventListener('click', _event.click.btnPaste);
 }
 
 function actionRename(_this) {
@@ -196,7 +344,7 @@ function actionDelete(_this) {
                if (obj.error) {
                   alert('failed to delete ...');
                } else {
-                  _this.data.copycut.pop(selected.dirname, selected.basename.split('/')[0]);
+                  _this.data.copycut.pop(selected.dirname, selected.basename);
                   _this.load(_this.data.filename);
                }
             }
@@ -212,11 +360,25 @@ function actionDelete(_this) {
    _this.dom.tmp.actionDialog = dialog;
 }
 
+function actionUpload(_this) {
+   console.log('TODO: upload');
+}
+
+function actionDownload(_this) {
+   console.log('TODO: download');
+}
+
 function createItemMenu(parent) {
    var menu = new edienilno.DropdownView();
    var div = document.createElement('div');
    div.className = 'dropdown-menu';
    var item;
+   item = document.createElement('div');
+   item.className = 'dropdown-item';
+   item.innerHTML = 'Download';
+   item.setAttribute('data-type', 'item-action');
+   item.setAttribute('data-action', 'download');
+   div.appendChild(item);
    item = document.createElement('div');
    item.className = 'dropdown-item';
    item.innerHTML = 'Rename';
@@ -272,6 +434,12 @@ function createTitleMenu(parent) {
    item.innerHTML = 'Paste';
    item.setAttribute('data-type', 'item-action');
    item.setAttribute('data-action', 'paste');
+   div.appendChild(item);
+   item = document.createElement('div');
+   item.className = 'dropdown-item';
+   item.innerHTML = 'Upload';
+   item.setAttribute('data-type', 'item-action');
+   item.setAttribute('data-action', 'upload');
    div.appendChild(item);
    var component = menu.getDom();
    component.appendChild(div);
@@ -413,6 +581,9 @@ function EdienilnoFileBrowser(id, filename) {
                case 'paste':
                   actionPaste(_this);
                   break;
+               case 'upload':
+                  actionUpload(_this);
+                  break;
             }
          }
       },
@@ -458,6 +629,9 @@ function EdienilnoFileBrowser(id, filename) {
                   break;
                case 'delete':
                   actionDelete(_this);
+                  break;
+               case 'download':
+                  actionDownload(_this);
                   break;
             }
          }
@@ -580,7 +754,7 @@ EdienilnoFileBrowser.prototype = {
          div.classList.add('xitem-blue');
          name.setAttribute('data-file', path);
       }
-      var copycut = this.data.copycut.get(this.data.filename, path.split('/')[0]);
+      var copycut = this.data.copycut.get(this.data.filename, path);
       if (copycut && copycut.type === 'cut') name.style.opacity = '0.5';
       div.style.cursor = 'pointer';
       div.setAttribute('draggable', 'true');

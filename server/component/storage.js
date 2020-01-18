@@ -88,6 +88,14 @@ const helper = {
             });
          });
       },
+      copy: async (path, newpath) => {
+         return new Promise((r, e) => {
+            i_fs.copyFile(path, newpath, (err) => {
+               if (err) return e(err);
+               r();
+            });
+         });
+      },
       // deal with small file only
       read: async (path) => {
          return new Promise((r, e) => {
@@ -142,6 +150,10 @@ class LocalFilesystemStorage {
 
    async move (path, newPath) {
       await helper.fs.rename(path, newPath);
+   }
+
+   async copy (path, newPath) {
+      await helper.fs.copy(path, newPath);
    }
 
    async loadSmallFile (path) {

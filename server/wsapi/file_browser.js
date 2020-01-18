@@ -68,9 +68,21 @@ const api = {
             break;
          case 'fileBrowser.move':
             if (!m.newpath) return false;
-            let newFilename = i_common.validatePath(i_path.join(base, m.newpath));
-            if (!newFilename) return false;
-            system.storage.move(filename, newFilename).then(() => {
+            let newMoveFilename = i_common.validatePath(i_path.join(base, m.newpath));
+            if (!newMoveFilename) return false;
+            system.storage.move(filename, newMoveFilename).then(() => {
+               ws.send(JSON.stringify(obj));
+            }, () => {
+               obj.error = 'failed';
+               obj.code = 1;
+               ws.send(JSON.stringify(obj));
+            });
+            break;
+         case 'fileBrowser.copy':
+            if (!m.newpath) return false;
+            let newCopyFilename = i_common.validatePath(i_path.join(base, m.newpath));
+            if (!newCopyFilename) return false;
+            system.storage.copy(filename, newCopyFilename).then(() => {
                ws.send(JSON.stringify(obj));
             }, () => {
                obj.error = 'failed';

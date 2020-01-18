@@ -109,10 +109,6 @@ function EdienilnoDropdownView(stick_to) {
       stick_to: stick_to,
       mask: null
    };
-   if (stick_to) {
-      stick_to.setAttribute('data-dropdown-id', this.id);
-   }
-   div.setAttribute('data-dropdown-id', this.id);
    div.style.backgroundColor = 'white';
    this.data = {
       cancelByMaskClick: true,

@@ -267,13 +267,16 @@ EdienilnoInputBox.prototype = {
    getValue: function () {
       return this.dom.input.value;
    },
-   act: function () {
-      document.body.appendChild(this.dom.self.getDom());
-      this.dom.self.show();
+   center: function () {
       var w = window.innerWidth, h = window.innerHeight;
       var container = this.dom.self.getDom();
       container.style.left = (~~((w - container.offsetWidth) / 2)) + 'px';
       container.style.top = (~~((h - container.offsetHeight) / 2)) + 'px';
+   },
+   act: function () {
+      document.body.appendChild(this.dom.self.getDom());
+      this.dom.self.show();
+      this.center();
       this.dom.input.focus();
    }
 };
@@ -349,13 +352,16 @@ EdienilnoYesNoCancelBox.prototype = {
       this.event.cacnelFn && this.dom.btn.cancel.removeEventListener('click', this.event.cancelFn);
       this.dom.self.dispose();
    },
-   act: function () {
-      document.body.appendChild(this.dom.self.getDom());
-      this.dom.self.show();
+   center: function () {
       var w = window.innerWidth, h = window.innerHeight;
       var container = this.dom.self.getDom();
       container.style.left = (~~((w - container.offsetWidth) / 2)) + 'px';
       container.style.top = (~~((h - container.offsetHeight) / 2)) + 'px';
+   },
+   act: function () {
+      document.body.appendChild(this.dom.self.getDom());
+      this.dom.self.show();
+      this.center();
    }
 };
 

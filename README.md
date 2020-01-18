@@ -18,3 +18,7 @@ node server/index.js
 
 (open browser and visit http://127.0.0.1:20202, use username=`test` password=`pass` to login)
 ```
+
+### Screenshots
+
+<img src="https://raw.githubusercontent.com/wiki/dna2funs/edienilno/images/screenshot.png" width="640" />

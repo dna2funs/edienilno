@@ -1,5 +1,5 @@
 # edienilno
-Online IDE based on Microsoft Monaco
+Online File Editor (File Manager)
 
 Learn and share with team work in your company and family!
 

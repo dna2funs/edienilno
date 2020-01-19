@@ -367,24 +367,23 @@ function actionUpload(_this) {
 function actionDownload(_this) {
    var selected = _this.data.selected;
    _this.data.selected = null;
-   ajax({
-      url: '/api/fileBrowser/download',
-      method: 'POST',
-      json: {
-         username: env.user.username,
-         uuid: env.user.uuid,
+   if (selected.isDir) {
+      alert('Not yet support folder download.');
+      return;
+   }
+   system.bundle.client.request(
+      {
+         cmd: 'fileBrowser.download',
          path: selected.filename
+      },
+      function (obj) {
+         if (!obj.uuid) {
+            alert('failed to download ...');
+            return;
+         }
+         window.open('/api/fileBrowser/download/' + obj.uuid);
       }
-   }, function (text) {
-      try {
-         var json = JSON.parse(text);
-         window.open('/api/fileBrowser/raw/' + json.uuid);
-      } catch(err) {
-         alert('failed to download the file.');
-      }
-   }, function () {
-      alert('failed to download the file.');
-   });
+   );
 }
 
 function actionShare(_this) {

@@ -32,7 +32,6 @@ const api = {
                obj.list = file_list;
                ws.send(JSON.stringify(obj));
             }, (err) => {
-               console.log(err);
                obj.error = 'failed';
                obj.code = 1;
                ws.send(JSON.stringify(obj));
@@ -98,6 +97,23 @@ const api = {
                ws.send(JSON.stringify(obj));
             });
             break;
+         case 'fileBrowser.download':
+            let f_uuid = i_uuid.v4();
+            while (system.restful.mapping[f_uuid]) f_uuid = i_uuid.v4();
+            system.restful.mapping[f_uuid] =  {
+               filepath: filename,
+               timestamp: new Date().getTime(),
+            };
+            obj.uuid = f_uuid;
+            cleanUp(f_uuid);
+            ws.send(JSON.stringify(obj));
+
+            function cleanUp(uuid) {
+               setTimeout(() => {
+                  if (system.restful.mapping[uuid]) delete system.restful.mapping[uuid];
+               }, 1000 * 12);
+            }
+            break;
          default:
             return false;
       }
@@ -105,7 +121,7 @@ const api = {
    },
    restful: {
       fileBrowser: {
-         raw: async (req, res, options) => {
+         download: async (req, res, options) => {
             let uuid = options.path.pop();
             let obj = system.restful.mapping[uuid];
             if (!obj) return i_utils.Web.e404(res);
@@ -128,34 +144,9 @@ const api = {
                'Content-Length': file_size,
             });
             system.storage.sync_createFileReadStream(download_filename).pipe(res);
-         },
-         download: async (req, res, options) => {
-            let json = options.json;
-            let username = json.username;
-            let path = json.path;
-            if (!username || !path) return i_utils.Web.e400(res);
-            let base = i_path.join(system.baseDir, username);
-            let download_filename = i_common.validatePath(i_path.join(base, path));
-            let uuid = i_uuid.v4();
-            while (system.restful.mapping[uuid]) uuid = i_uuid.v4();
-            let obj = {
-               filepath: download_filename,
-               timestamp: new Date().getTime(),
-            };
-            system.restful.mapping[uuid] = obj;
-            cleanUp(uuid);
-            i_utils.Web.rjson(res, { uuid });
-
-            function cleanUp(uuid) {
-               setTimeout(() => {
-                  if (system.restful.mapping[uuid]) delete system.restful.mapping[uuid];
-               }, 1000 * 12);
-            }
          }, // download
-      }
-   },
+      }, // fileBrowser
+   }, // restful
 };
-
-api.restful.fileBrowser.download = i_utils.Web.require_login(api.restful.fileBrowser.download);
 
 module.exports = api;

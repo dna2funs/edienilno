@@ -102,6 +102,13 @@ const api = {
    }, // auth
 };
 
+const extensions = {
+   fileBrowser: require('./wsapi/file_browser').restful.fileBrowser,
+};
+Object.keys(extensions).forEach((name) => {
+   api[name] = extensions[name];
+});
+
 if (!i_env.debug && !i_env.auth_internal) {
    i_utils.Web.require_admin_login_batch(api.internal.keyval);
    i_env.auth_internal = true;

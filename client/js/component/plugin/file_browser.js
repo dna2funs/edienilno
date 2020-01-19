@@ -365,7 +365,26 @@ function actionUpload(_this) {
 }
 
 function actionDownload(_this) {
-   console.log('TODO: download');
+   var selected = _this.data.selected;
+   _this.data.selected = null;
+   ajax({
+      url: '/api/fileBrowser/download',
+      method: 'POST',
+      json: {
+         username: env.user.username,
+         uuid: env.user.uuid,
+         path: selected.filename
+      }
+   }, function (text) {
+      try {
+         var json = JSON.parse(text);
+         window.open('/api/fileBrowser/raw/' + json.uuid);
+      } catch(err) {
+         alert('failed to download the file.');
+      }
+   }, function () {
+      alert('failed to download the file.');
+   });
 }
 
 function actionShare(_this) {

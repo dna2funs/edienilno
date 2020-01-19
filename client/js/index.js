@@ -1,7 +1,12 @@
 'use strict';
 //@include common.js
 //@include editor.js
+//@include component/common.js
 //@include component/layout.js
+//@include component/nav.js
+//@include component/plugin.js
+//@include component/controller.js
+//@include component/client.js
 
 var ui = {
    loading: dom('#p_loading'),
@@ -194,7 +199,7 @@ function resize() {
          ui.side.searcher,
          ui.side.plugins
       ].filter(function (x) {
-         return x.resize;
+         return !!x.resize;
       });
    }
    _controller.resizeList.forEach(function (component) {

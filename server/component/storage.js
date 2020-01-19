@@ -42,6 +42,7 @@ const helper = {
                   mtime: stat.mtimeMs,
                   atime: stat.atimeMs,
                   ctime: stat.ctimeMs,
+                  size: stat.size,
                   isDirectory: stat.isDirectory(),
                   isFile: stat.isFile(),
                });
@@ -139,6 +140,10 @@ class LocalFilesystemStorage {
       return files;
    }
 
+   async lstat (path) {
+      return await helper.fs.lstat(path);
+   }
+
    async create (path) {
       let fd = await helper.fs.open(path, 'w+');
       await helper.fs.close(fd);
@@ -170,6 +175,14 @@ class LocalFilesystemStorage {
 
    sync_exists (path) {
       return i_fs.existsSync(path);
+   }
+
+   sync_createFileReadStream (path, options) {
+      return i_fs.createReadStream(path, options);
+   }
+
+   sync_createFileWriteStream (path, options) {
+      return i_fs.createWriteStream(path, options);
    }
 }
 

@@ -215,10 +215,10 @@ const api = {
             let uuid = options.path.pop();
             let obj = system.mapping.download[uuid];
             if (!obj) return i_utils.Web.e404(res);
-            delete system.mapping.download[uuid];
             if (!obj.filepath || !obj.timestamp) return i_utils.Web.e400(res);
-            let timestamp = new Date().getTime();
-            if (timestamp - obj.timestamp >= 1000 * 10 /* 10s */) return i_utils.Web.e400(res);
+            // XXX: uncomment to strict usage of download api
+            // let timestamp = new Date().getTime();
+            // if (timestamp - obj.timestamp >= 1000 * 10 /* 10s */) return i_utils.Web.e400(res);
             let download_filename = obj.filepath;
             let file_size = 0;
             try {
@@ -228,11 +228,37 @@ const api = {
             } catch(err) {
                return i_utils.Web.e400(res);
             }
+
+            // handle wechat case; give another chance
+            if (/micromessenger/i.test(req.headers['user-agent'])) {
+               clearTimeout(obj.timer);
+               // extend timeout to 30s so that user has time to open external browser and click download
+               obj.timer = setTimeout(() => {
+                  obj.timer = 0;
+                  obj.timestamp = new Date().getTime() + 1000 * 20;
+                  if (system.mapping.download[uuid]) delete system.mapping.download[uuid];
+               }, 1000 * 30);
+               res.writeHead(200, {
+                  'Content-Type': 'application/octet-stream',
+                  'Content-Disposition': `attachment; filename=${i_path.basename(download_filename)}`,
+                  'Content-Length': file_size,
+               });
+               res.end('');
+               // wechat will pending download and ask user to open external browser
+               // once started, the external browser have to visit the same url once again.
+               return;
+            }
+
+            // XXX: open a danger duration that anyone can use the uuid to download the file
+            //      some android mobile browser do GET/HEAD request several times to get the file downloaded
+            //      if want to use strict mode (more secure), uncomment below line
+            // delete system.mapping.download[uuid];
             res.writeHead(200, {
                'Content-Type': 'application/octet-stream',
                'Content-Disposition': `attachment; filename=${i_path.basename(download_filename)}`,
                'Content-Length': file_size,
             });
+            if (req.method === 'HEAD') return res.end('');
             system.storage.sync_createFileReadStream(download_filename).pipe(res);
          }, // download
       }, // fileBrowser

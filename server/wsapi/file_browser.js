@@ -243,7 +243,7 @@ const api = {
                   'Content-Disposition': `attachment; filename=${i_path.basename(download_filename)}`,
                   'Content-Length': file_size,
                });
-               res.end('');
+               res.end('empty');
                // wechat will pending download and ask user to open external browser
                // once started, the external browser have to visit the same url once again.
                return;
@@ -258,7 +258,7 @@ const api = {
                'Content-Disposition': `attachment; filename=${i_path.basename(download_filename)}`,
                'Content-Length': file_size,
             });
-            if (req.method === 'HEAD') return res.end('');
+            if (req.method === 'HEAD') return res.end('empty');
             system.storage.sync_createFileReadStream(download_filename).pipe(res);
          }, // download
       }, // fileBrowser

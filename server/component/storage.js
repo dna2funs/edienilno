@@ -114,12 +114,69 @@ const helper = {
             });
          });
       },
+      _open: async (filename, flags) => {
+         return new Promise((r, e) => {
+            i_fs.open(filename, flags, (err, fd) => {
+               if (err) return e(err);
+               r(fd);
+            });
+         });
+      },
+      _close: async (fd) => {
+         return new Promise((r, e) => {
+            i_fs.close(fd, (err) => {
+               if (err) return e(err);
+               r();
+            });
+         });
+      },
+      _writeRaw: async (fd, buf, size, offset) => {
+         return new Promise((r, e) => {
+            i_fs.write(fd, buf, 0, size, offset, (err, n) => {
+               if (err) return e(err);
+               r(n);
+            });
+         });
+      },
+      writeRaw: async (filename, offset, size, buf) => {
+         let dirname = i_path.dirname(filename);
+         if (!i_fs.existsSync(dirname)) {
+            await helper.fs.mkdir(dirname);
+         }
+         let fd;
+         if (offset === 0) {
+            fd = await helper.fs._open(filename, 'w');
+         } else {
+            fd = await helper.fs._open(filename, 'r+');
+         }
+         let n = await helper.fs._writeRaw(fd, buf, size, offset);
+         fd && await helper.fs._close(fd);
+         return n;
+      }, // writeRaw
    }, // fs
 };
 
 class LocalFilesystemStorage {
    async mkdir (path) {
       await helper.fs.mkdir(path);
+   }
+
+   async mkdir_p (path) {
+      let parts = path.split('/');
+      if (parts.length === 1) return await this.mkdir(path);
+      let parentPath = parts.slice(0, parts.length-1).join('/');
+      let stat;
+      if (this.sync_exists(path)) {
+         stat = await this.lstat(path);
+         if (!stat.isDirectory) throw 'invalid path';
+         return;
+      }
+      if (!this.sync_exists(parentPath)) {
+         await this.mkdir_p(parentPath);
+      }
+      stat = await this.lstat(parentPath);
+      if (!stat.isDirectory) throw 'invalid path';
+      await this.mkdir(path);
    }
 
    async rmdir (path) {
@@ -167,6 +224,10 @@ class LocalFilesystemStorage {
 
    async saveSmallFile (path, data) {
       await helper.fs.write(path, data);
+   }
+
+   async saveFile (path, offset, buf) {
+      await helper.fs.writeRaw(path, offset, buf.length, buf);
    }
 
    sync_mkdir (path) {

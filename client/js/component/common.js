@@ -238,6 +238,7 @@ function EdienilnoInputBox(options) {
    tmp.appendChild(this.dom.input);
    this.dom.input.value = options.inputValue || '';
    this.dom.input.className = options.inputStyle || 'input clr-input';
+   if (options.inputType) this.dom.input.setAttribute('type', options.inputType);
    container.appendChild(tmp);
    this.dom.self.disableCancelByMaskClick();
    this.dom.btn.ok.addEventListener('click', this.event.okFn);
@@ -260,7 +261,13 @@ EdienilnoInputBox.prototype = {
       this.event.cacnelFn && this.dom.btn.cancel.removeEventListener('click', this.event.cancelFn);
       this.dom.self.dispose();
    },
+   getInputDom: function () {
+      return this.dom.input;
+   },
    getValue: function () {
+      if (this.dom.input.getAttribute('type') === 'file') {
+         return this.dom.input.files;
+      }
       return this.dom.input.value;
    },
    center: function () {
@@ -347,6 +354,9 @@ EdienilnoYesNoCancelBox.prototype = {
       this.event.noFn && this.dom.btn.no.removeEventListener('click', this.event.noFn);
       this.event.cacnelFn && this.dom.btn.cancel.removeEventListener('click', this.event.cancelFn);
       this.dom.self.dispose();
+   },
+   getBodyDom: function () {
+      return this.dom.body;
    },
    center: function () {
       var w = window.innerWidth, h = window.innerHeight;

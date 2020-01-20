@@ -6,6 +6,259 @@ var system = {
    bundle: null
 };
 
+function LargeFileUploader() {
+   this.file = null;
+   this.filename = null;
+   this.step = 2*1024*1024; // 2MB
+   this.offset = 0;
+   this.paused = true;
+   this.options = {};
+}
+LargeFileUploader.prototype = {
+   onPause: function (fn) { this.options.onPause = fn; return this; },
+   onData: function (fn) { this.options.onData = fn; return this; },
+   onResume: function (fn) { this.options.onResume = fn; return this; },
+   onStart: function (fn) { this.options.onStart = fn; return this; },
+   onComplete: function (fn) { this.options.onComplete = fn; return this; },
+   onError: function (fn) { this.options.onError = fn; return this; },
+   onCancel: function (fn) { this.options.onCancel = fn; return this; },
+   initFileReader: function () {
+      var _this = this;
+      this.reader = new FileReader();
+      this.reader.addEventListener('loadend', event_reader_loadend);
+      function event_reader_loadend(e) {
+         if (e.target.readyState === FileReader.DONE) {
+            // TODO: if (_this.offset === 0) check dup
+            _this.uploadBlob(_this.file_id, _this.file.size, _this.offset, e.target.result).then(function () {
+               console.log('[upload complete] partial', _this.offset);
+               _this.options.onData && _this.options.onData(_this.file.size, _this.offset, _this.step);
+               _this.offset += _this.step;
+               if (_this.offset >= _this.file.size) {
+                  console.log('[upload complete]');
+                  _this.options.onComplete && _this.options.onComplete();
+                  return;
+               }
+               if (!_this.paused) _this.reader.readAsBinaryString(_this.file.slice(_this.offset, _this.offset + _this.step));
+            }, function (err) {
+               console.log(err, '[transfer error] paused');
+               _this.options.onError && _this.options.onError(err);
+               _this.paused = true;
+            });
+         }
+      }
+   },
+   uploadBlob: function (file_id, size, offset, data) {
+      var _this = this;
+      return new Promise(function (r, e) {
+         // TODO: check if offline
+         system.bundle.client.request(
+            {
+               cmd: 'fileBrowser.upload',
+               path: _this.filename,
+               size: size,
+               offset: offset,
+               data: data,
+               uuid: file_id
+            },
+            function (obj) {
+               _this.file_id = obj.uuid;
+               if (obj.ack !== 'error' && obj.ack !== 'failed') {
+                  console.log('[upload blob] done'); r();
+               } else {
+                  console.log('[upload blob] error'); e();
+               }
+            }
+         );
+      });
+   },
+   reset: function () {
+      this.filename = null;
+      this.file = null;
+      this.file_id = null;
+      this.offset = 0;
+      this.paused = true;
+   },
+   uploadFile: function (filename, file) {
+      this.filename = filename;
+      this.file = file;
+      console.log('[uploading]', this.file);
+      this.file_id = null;
+      this.offset = 0;
+      this.step = 2*1024*1024; // 2MB
+      this.paused = false;
+      // IE 10+: readAsArrayBuffer
+      this.initFileReader();
+      this.reader.readAsBinaryString(this.file.slice(0, this.step));
+   },
+   pause: function () {
+      this.options.onPause && this.options.onPause();
+      this.paused = true;
+   },
+   resume: function () {
+      this.options.onResume && this.options.onResume();
+      this.paused = false;
+      this.reader.readAsBinaryString(this.file.slice(this.offset, this.offset + this.step));
+   },
+   cancel: function () {
+      if (!this.file_id || !this.filename) return;
+      this.offset = 0;
+      this.paused = true;
+      var _this = this;
+      system.bundle.client.request(
+         {
+            cmd: 'fileBrowser.upload',
+            path: _this.filename,
+            size: 1,
+            offset: 0,
+            data: 'x',
+            cancel: true,
+            uuid: this.file_id
+         },
+         function (obj) {
+            _this.options.onCancel && _this.options.onCancel();
+            console.log('[upload] cancel');
+         }
+      );
+      this.file_id = null;
+   }
+};
+
+function EdienilnoUploadManager (_parent, baseDir, files) {
+   var fileitems = [];
+   for (var i = 0, n = files.length; i < n; i++) {
+      fileitems[i] = {
+         ref: files[i],
+         stat: 'pending',
+         progress: 0
+      };
+   }
+   this.items = fileitems;
+   this.manager = { index: 0, isPaused: true, isAllComplete: false, baseDir: baseDir };
+   this.uploader = new LargeFileUploader();
+   this.uploader.onData(function (size, offset, step) {
+      var item = _this.items[_this.manager.index];
+      if (!item) return;
+      if (size === 0) {
+         item.progresss = 100;
+      } else {
+         item.progress = (~~((offset + step) / size * 10000)) / 100;
+         item.stat = 'uploading';
+      }
+   }).onComplete(function () {
+      var item = _this.items[_this.manager.index];
+      if (item) {
+         item.stat = 'complete';
+         item.progress = 100;
+      }
+      _this.manager.index ++;
+      item = _this.items[_this.manager.index];
+      while (item && /[`!@&*\\|?/><:]/.test(item.ref.name)) {
+         item.stat = 'canceled';
+         _this.manager.index ++;
+         item = _this.items[_this.manager.index];
+      }
+      if (_this.manager.index >= _this.items.length) {
+         _this.manager.isAllComplete = true;
+         _this.dialog.dom.btn.yes.innerHTML = 'Close';
+         _this.dialog.dom.btn.no.style.display = 'none';
+         _this.dialog.dom.btn.cancel.style.display = 'none';
+      } else if (item) {
+         _this.uploader.uploadFile(_this.manager.baseDir + item.ref.name, item.ref);
+      }
+      _this.render();
+   }).onPause(function () {
+   }).onResume(function () {
+   }).onCancel(function () {
+      var item = _this.items[_this.manager.index];
+      if (!item) return;
+      item.stat = 'canceled';
+      _this.render();
+   });
+   var _this = this;
+   this.dialog = new edienilno.YesNoCancelBox({
+      titleText: 'Upload File',
+      yesTitle: 'Pause',
+      noTitle: 'Skip',
+      cancelTitle: 'Cancel',
+      yesFn: function () {
+         // pause / resume / close
+         if (_this.manager.isAllComplete) {
+            _this.dialog.dispose();
+            _parent.load(baseDir);
+            return;
+         }
+         if (_this.manager.isPaused) {
+            _this.dialog.dom.btn.yes.innerHTML = 'Pause';
+            _this.uploader.resume();
+         } else {
+            _this.dialog.dom.btn.yes.innerHTML = 'Resume';
+            _this.uploader.pause();
+         }
+         _this.manager.isPaused = !_this.manager.isPaused;
+      },
+      noFn: function () {
+         // skip
+         _this.uploader.cancel();
+         _this.manager.index++;
+         if (_this.manager.index >= _this.items.length) {
+            _this.manager.isAllComplete = true;
+            _this.dialog.dom.btn.yes.innerHTML = 'Close';
+            _this.dialog.dom.btn.no.style.display = 'none';
+            _this.dialog.dom.btn.cancel.style.display = 'none';
+         }
+         _this.render();
+      },
+      cancelFn: function () {
+         _this.uploader.cancel();
+         _parent.load(baseDir);
+         _this.dialog.dispose();
+      }
+   });
+   this.dialog.act();
+   this.dom = {
+      body: this.dialog.getBodyDom(),
+      items: this.items.map(function (item) {
+         var div = document.createElement('div');
+         div.appendChild(document.createTextNode(item.ref.name));
+         div.style.width = '100%';
+         div.style.height = '24px';
+         div.style.overflow = 'hidden';
+         div.style.whiteSpace = 'nowrap';
+         div.style.textOverflow = 'ellipsis';
+         var progress = document.createElement('div');
+         progress.style.width = '0%';
+         progress.style.height = '20px';
+         progress.style.position = 'relative';
+         progress.style.top = '-20px';
+         progress.style.left = '0px';
+         progress.style.opacity = '0.5';
+         progress.style.backgroundColor = 'green';
+         div.appendChild(progress);
+         return div;
+      })
+   };
+   this.dom.items.forEach(function (div) {
+      _this.dom.body.appendChild(div);
+   });
+
+   var firstItem = this.items[0];
+   this.uploader.uploadFile(baseDir + firstItem.ref.name, firstItem.ref);
+}
+EdienilnoUploadManager.prototype = {
+   render: function () {
+      for (var i = 0, n = this.dom.items.length; i < n; i++) {
+         var div = this.dom.items[i];
+         var item = this.items[i];
+         div.children[0].style.width = (div.offsetWidth / 100 * item.progress) + 'px';
+         if (item.stat === 'canceled') {
+            div.children[0].style.width = div.offsetWidth + 'px';
+            div.style.textDecoration = 'line-through';
+            div.style.opacity = '0.2';
+         }
+      }
+   }
+};
+
 function basename(filename) {
    if (!filename || filename === '/') return null;
    return filename.split('/').pop();
@@ -361,7 +614,31 @@ function actionDelete(_this) {
 }
 
 function actionUpload(_this) {
-   console.log('TODO: upload');
+   var dialog = new edienilno.InputBox({
+      titleText: 'Upload File',
+      bodyText: 'Select a file:',
+      inputType: 'file',
+      okTitle: 'Upload',
+      okStyle: 'btn btn-success',
+      okFn: function () {
+         var files = dialog.getValue();
+         console.log(files);
+         new EdienilnoUploadManager(_this, _this.data.filename, files);
+         //var path = _this.data.filename + file.name;
+         //var uploader = new LargeFileUploader(path);
+         //uploader.uploadFile(file);
+         dialog.dispose();
+         _this.dom.tmp.actionDialog = null;
+         //_this.load(_this.data.filename);
+      },
+      cancelFn: function () {
+         dialog.dispose();
+         _this.dom.tmp.actionDialog = null;
+      }
+   });
+   dialog.getInputDom().setAttribute('multiple', 'multiple');
+   dialog.act();
+   _this.dom.tmp.actionDialog = dialog;
 }
 
 function actionDownload(_this) {

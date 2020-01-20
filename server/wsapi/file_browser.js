@@ -8,11 +8,13 @@ const i_utils = require('../utils');
 const system = {
    baseDir: i_path.resolve(process.env.EDIENILNO_FS_STORAGE || '/tmp'),
    storage: new i_storage.LocalFilesystemStorage(),
-   restful: {
-      mapping: {
-         // uuid: {filepath, timestamp}
-      },
+   mapping: {
+      download: {}, // uuid: {filepath, timestamp}
+      upload: {}, // uuid: {filepath, filesize, cursor, timestamp}
    },
+   DOWNLOAD_MAX_PARALLEL: 100,
+   UPLOAD_MAX_PARALLEL: 100,
+   UPLOAD_MAX_FILE_SIZE: 1024 * 1024 * 10 /* 10MB */,
 };
 
 const api = {
@@ -98,20 +100,105 @@ const api = {
             });
             break;
          case 'fileBrowser.download':
+            if (Object.keys(system.mapping.download).length > system.DOWNLOAD_MAX_PARALLEL) {
+               obj.error = 'failed: too many parallel downloading ...';
+               obj.code = 1;
+               ws.send(JSON.stringify(obj));
+               break;
+            }
             let f_uuid = i_uuid.v4();
-            while (system.restful.mapping[f_uuid]) f_uuid = i_uuid.v4();
-            system.restful.mapping[f_uuid] =  {
+            while (system.mapping.download[f_uuid]) f_uuid = i_uuid.v4();
+            system.mapping.download[f_uuid] =  {
                filepath: filename,
                timestamp: new Date().getTime(),
             };
             obj.uuid = f_uuid;
-            cleanUp(f_uuid);
+            downloadCleanUp(f_uuid);
             ws.send(JSON.stringify(obj));
 
-            function cleanUp(uuid) {
+            function downloadCleanUp(uuid) {
                setTimeout(() => {
-                  if (system.restful.mapping[uuid]) delete system.restful.mapping[uuid];
+                  if (system.mapping.download[uuid]) delete system.mapping.download[uuid];
                }, 1000 * 12);
+            }
+            break;
+         case 'fileBrowser.upload':
+            if (!m.size || !m.data) return false;
+            if (Object.keys(system.mapping.upload).length > system.UPLOAD_MAX_PARALLEL) {
+               obj.error = 'failed: too many parallel uploading ...';
+               obj.code = 1;
+               ws.send(JSON.stringify(obj));
+               break;
+            }
+            i_common.prepareUserFolder(system.storage, system.baseDir, '_upload_');
+            let upload_base = i_path.join(system.baseDir, '_upload_');
+            let u_uuid = m.uuid, uobj = system.mapping.upload[u_uuid];
+            let size = m.size, offset = m.offset || 0, buf = m.data && toByteArray(m.data);
+            if (size > system.UPLOAD_MAX_FILE_SIZE || offset + buf.length > system.UPLOAD_MAX_FILE_SIZE) {
+               obj.error = 'failed: the file is too large ...';
+               obj.code = 1;
+               ws.send(JSON.stringify(obj));
+               break;
+            }
+            if (!u_uuid) {
+               u_uuid = i_uuid.v4();
+               while (system.mapping.upload[u_uuid]) u_uuid = i_uuid.v4();
+               uobj = {
+                  filename: filename,
+                  timestamp: new Date().getTime(),
+                  tmp_filename: null,
+               };
+               system.mapping.upload[u_uuid] = uobj;
+               uploadCleanUp(uobj, u_uuid);
+            }
+            let upload_tmp_filename = i_path.join(upload_base, u_uuid);
+            uobj.tmp_filename = upload_tmp_filename;
+            if (m.cancel) {
+               _uploadCleanUp(uobj);
+               return;
+            }
+            obj.uuid = u_uuid;
+            system.storage.saveFile(upload_tmp_filename, offset, buf).then(() => {
+               if (offset + buf.length >= size) { // treat as uploading complete
+                  uobj.timer && clearTimeout(uobj.timer);
+                  uobj.timer = 0;
+                  delete system.mapping.upload[uobj.uuid];
+                  system.storage.move(uobj.tmp_filename, uobj.filename).then(() => {
+                     obj.ack = 'complete';
+                     ws.send(JSON.stringify(obj));
+                  }, () => {
+                     console.log(new Date().toISOString(), 'failed to upload: buffer error');
+                     obj.ack = 'failed';
+                     ws.send(JSON.stringify(obj));
+                  });
+               } else {
+                  obj.ack = 'uploading';
+                  ws.send(JSON.stringify(obj));
+               }
+            }, () => {
+               obj.ack = 'error';
+               ws.send(JSON.stringify(obj));
+            });
+
+            function toByteArray(arr) {
+               var n = arr.length;
+               var b = new Uint8Array(n);
+               for (var i = 0; i < n; i++) {
+                  b[i] = arr[i].charCodeAt(0);
+               }
+               arr = null;
+               return b;
+            }
+            function uploadCleanUp(obj, uuid) {
+               obj.timer = setTimeout(() => {
+                  if (system.mapping.upload[uuid]) delete system.mapping.upload[uuid];
+                  _uploadCleanUp(obj);
+               }, 1000 * 3600 * 24);
+            }
+            function _uploadCleanUp(obj) {
+               if (obj.tmp_filename) system.storage.unlink(obj.tmp_filename).then(() => {}, () => {
+                  console.error(new Date().toISOString(), 'failed to remove tmp file:', obj.tmp_filename);
+               });
             }
             break;
          default:

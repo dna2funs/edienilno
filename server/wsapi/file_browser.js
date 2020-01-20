@@ -108,16 +108,18 @@ const api = {
             }
             let f_uuid = i_uuid.v4();
             while (system.mapping.download[f_uuid]) f_uuid = i_uuid.v4();
-            system.mapping.download[f_uuid] =  {
+            let dobj =  {
                filepath: filename,
                timestamp: new Date().getTime(),
             };
+            system.mapping.download[f_uuid] = dobj;
             obj.uuid = f_uuid;
-            downloadCleanUp(f_uuid);
+            downloadCleanUp(dobj, f_uuid);
             ws.send(JSON.stringify(obj));
 
-            function downloadCleanUp(uuid) {
-               setTimeout(() => {
+            function downloadCleanUp(obj, uuid) {
+               obj.timer = setTimeout(() => {
+                  obj.timer = 0;
                   if (system.mapping.download[uuid]) delete system.mapping.download[uuid];
                }, 1000 * 12);
             }
@@ -191,6 +193,7 @@ const api = {
             }
             function uploadCleanUp(obj, uuid) {
                obj.timer = setTimeout(() => {
+                  obj.timer = 0;
                   if (system.mapping.upload[uuid]) delete system.mapping.upload[uuid];
                   _uploadCleanUp(obj);
                }, 1000 * 3600 * 24);
@@ -210,9 +213,9 @@ const api = {
       fileBrowser: {
          download: async (req, res, options) => {
             let uuid = options.path.pop();
-            let obj = system.restful.mapping[uuid];
+            let obj = system.mapping.download[uuid];
             if (!obj) return i_utils.Web.e404(res);
-            delete system.restful.mapping[uuid];
+            delete system.mapping.download[uuid];
             if (!obj.filepath || !obj.timestamp) return i_utils.Web.e400(res);
             let timestamp = new Date().getTime();
             if (timestamp - obj.timestamp >= 1000 * 10 /* 10s */) return i_utils.Web.e400(res);

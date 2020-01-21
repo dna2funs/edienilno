@@ -74,7 +74,7 @@ function erase_cookie(key) {
 }
 
 function is_wechat_browser() {
-   return /micromessager/i.test(navigator.userAgent);
+   return /micromessenger/i.test(navigator.userAgent);
 }
 
 function reload_on_hashchange() {

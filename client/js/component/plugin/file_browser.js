@@ -658,11 +658,16 @@ function actionDownload(_this) {
             alert('failed to download ...');
             return;
          }
-         var a = document.createElement('a');
-         a.href = '/api/fileBrowser/download/' + obj.uuid;
-         document.body.appendChild(a);
-         a.click();
-         document.body.removeChild(a);
+         if (is_wechat_browser()) {
+            window.open('/api/fileBrowser/download/' + obj.uuid);
+         } else {
+            var a = document.createElement('a');
+            a.href = '/api/fileBrowser/download/' + obj.uuid;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+         }
       }
    );
 }

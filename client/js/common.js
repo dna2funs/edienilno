@@ -73,6 +73,10 @@ function erase_cookie(key) {
    document.cookie = key + '=0;expires=Thu, 01 Jan 1970 00:00:01 GMT';
 }
 
+function is_wechat_browser() {
+   return /micromessager/i.test(navigator.userAgent);
+}
+
 function reload_on_hashchange() {
    window.addEventListener('hashchange', function () {
       window.location.reload(true);

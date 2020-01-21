@@ -9,10 +9,11 @@ const system = {
    baseDir: i_path.resolve(process.env.EDIENILNO_FS_STORAGE || '/tmp'),
    storage: new i_storage.LocalFilesystemStorage(),
    mapping: {
-      download: {}, // uuid: {filepath, timestamp}
+      download: {}, // uuid: {filepath, timestamp, semaph}
       upload: {}, // uuid: {filepath, filesize, cursor, timestamp}
    },
    DOWNLOAD_MAX_PARALLEL: 100,
+   DOWNLOAD_TIMEOUT_DEFAULT: 30, /* s */
    UPLOAD_MAX_PARALLEL: 100,
    UPLOAD_MAX_FILE_SIZE: 1024 * 1024 * 10 /* 10MB */,
 };
@@ -121,7 +122,7 @@ const api = {
                obj.timer = setTimeout(() => {
                   obj.timer = 0;
                   if (system.mapping.download[uuid]) delete system.mapping.download[uuid];
-               }, 1000 * 12);
+               }, 1000 * system.DOWNLOAD_TIMEOUT_DEFAULT);
             }
             break;
          case 'fileBrowser.upload':
@@ -216,9 +217,8 @@ const api = {
             let obj = system.mapping.download[uuid];
             if (!obj) return i_utils.Web.e404(res);
             if (!obj.filepath || !obj.timestamp) return i_utils.Web.e400(res);
-            // XXX: uncomment to strict usage of download api
-            // let timestamp = new Date().getTime();
-            // if (timestamp - obj.timestamp >= 1000 * 10 /* 10s */) return i_utils.Web.e400(res);
+            if (obj.semaph > 0) return i_utils.Web.e403(res);
+            obj.semaph ++;
             let download_filename = obj.filepath;
             let file_size = 0;
             try {
@@ -226,27 +226,19 @@ const api = {
                if (!stat.isFile) throw 'not a file';
                file_size = stat.size;
             } catch(err) {
+               // no semaph-- for it is an invalid 
                return i_utils.Web.e400(res);
             }
 
             // handle wechat case; give another chance
             if (/micromessenger/i.test(req.headers['user-agent'])) {
                clearTimeout(obj.timer);
-               // extend timeout to 30s so that user has time to open external browser and click download
+               // extend another 30s so that user has time to open external browser and click download
                obj.timer = setTimeout(() => {
                   obj.timer = 0;
                   obj.timestamp = new Date().getTime() + 1000 * 20;
                   if (system.mapping.download[uuid]) delete system.mapping.download[uuid];
-               }, 1000 * 30);
-               res.writeHead(200, {
-                  'Content-Type': 'application/octet-stream',
-                  'Content-Disposition': `attachment; filename=${i_path.basename(download_filename)}`,
-                  'Content-Length': file_size,
-               });
-               res.end('empty');
-               // wechat will pending download and ask user to open external browser
-               // once started, the external browser have to visit the same url once again.
-               return;
+               }, 1000 * system.DOWNLOAD_TIMEOUT_DEFAULT);
             }
 
             // XXX: open a danger duration that anyone can use the uuid to download the file
@@ -258,8 +250,12 @@ const api = {
                'Content-Disposition': `attachment; filename=${i_path.basename(download_filename)}`,
                'Content-Length': file_size,
             });
-            if (req.method === 'HEAD') return res.end('empty');
-            system.storage.sync_createFileReadStream(download_filename).pipe(res);
+            if (req.method === 'HEAD') return res.end();
+            try {
+               system.storage.sync_createFileReadStream(download_filename).pipe(res);
+            } catch (err) {} finally {
+               obj.semaph --;
+            }
          }, // download
       }, // fileBrowser
    }, // restful

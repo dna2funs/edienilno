@@ -658,7 +658,11 @@ function actionDownload(_this) {
             alert('failed to download ...');
             return;
          }
-         window.open('/api/fileBrowser/download/' + obj.uuid);
+         var a = document.createElement('a');
+         a.href = '/api/fileBrowser/download/' + obj.uuid;
+         document.body.appendChild(a);
+         a.click();
+         document.body.removeChild(a);
       }
    );
 }

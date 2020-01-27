@@ -18,6 +18,16 @@ function to_byte(arr) {
    return b;
 }
 
+function to_string(arr) {
+   var n = arr.length;
+   var s = '';
+   for (var i = 0; i < n; i++) {
+      s += String.fromCharCode(arr[i]);
+   }
+   arr = null;
+   return s;
+}
+
 function hex(n) {
    if (n < 10) return String.fromCharCode(n + 48);
    return String.fromCharCode(n + 55);
@@ -112,8 +122,57 @@ function render_data(_this, data) {
          _this.data.binSelected = evt.target.getAttribute('id');
          evt.target.classList.add('sebin-active');
       };
+      _this.event.keySdiv = function (evt) {
+         if (!_this.data.binary) return;
+         if (!_this.data.binSelected) return;
+         var keycode = evt.keyCode;
+         if (keycode >= 97 && keycode < 123) {
+            keycode -= 97 - 65;
+         }
+         if (keycode === 64 + 26 && (evt.metaKey || evt.ctrlKey)) {
+            // ctrl+Z
+            console.log('TODO: ctrl + Z');
+            return;
+         }
+         var ishex = false;
+         if (keycode >= 48 && keycode < 58) {
+            keycode -= 48;
+            ishex = true;
+         } else if (keycode >= 65 && keycode < 71) {
+            keycode -= 55;
+            ishex = true
+         }
+         if (!ishex) return;
+         // A-F 0-9
+         var nextId = _this.data.binSelected.split('-');
+         var id = parseInt(nextId[1]);
+         var sub = parseInt(nextId[2]);
+         var d = _this.data.data[id];
+         var H = ~~(d/16), L = d%16;
+         var selected = document.getElementById(_this.data.binSelected);
+         if (sub === 1) {
+            nextId[2] ++;
+            _this.data.data[id] = keycode * 16 + L;
+            if (selected) selected.innerHTML = hex(keycode);
+         } else {
+            nextId[1] ++;
+            nextId[2] = 1;
+            _this.data.data[id] = H * 16 + keycode;
+            id ++;
+            if (selected) selected.innerHTML = hex(keycode);
+         }
+         nextId = nextId.join('-');
+         if (_this.data.data.length > id) {
+            if (selected) selected.classList.remove('sebin-active');
+            selected = document.getElementById(nextId);
+            if (selected) selected.classList.add('sebin-active');
+            _this.data.binSelected = nextId;
+         }
+         _this.data.changed = true;
+      }
       _this.dom.bin.addEventListener('scroll', _this.event.scrollSdiv);
       _this.dom.binSdiv.addEventListener('click', _this.event.clickSdiv);
+      document.body.addEventListener('keydown', _this.event.keySdiv);
    } else {
       _this.dom.txt.value = data;
       _this.dom.txt.classList.remove('disabled');
@@ -151,6 +210,9 @@ function EdienilnoSimpleEditor(id, filename) {
          btnClose: function () {
             if (_this.data.changed) {
                var value = _this.dom.txt.value;
+               if (_this.data.binary) {
+                  value = to_string(_this.data.data);
+               }
                _this.dom.txt.classList.add('disabled');
                _this.dom.txt.value = 'Saving ...';
                system.bundle.client.request(
@@ -229,6 +291,7 @@ EdienilnoSimpleEditor.prototype = {
       if (this.dom.bin) {
          this.dom.bin.removeEventListener('scroll', this.event.scrollSdiv);
          this.dom.binSdiv.removeEventListener('click', this.event.clickSdiv);
+         document.body.removeEventListener('keydown', this.event.keySdiv);
          if (this.data.binSelected) this.data.binSelected = null;
       }
       this.dom.txt.removeEventListener('change', this.event.change.txt);

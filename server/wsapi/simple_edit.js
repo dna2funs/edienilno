@@ -41,6 +41,7 @@ const api = {
             break;
          case 'simpleEdit.save':
             if (!m.data) return false;
+            m.data = Buffer.from(m.data, 'binary');
             system.storage.saveSmallFile(filename, m.data).then(() => {
                ws.send(JSON.stringify(obj));
             }, () => {

@@ -624,12 +624,8 @@ function actionUpload(_this) {
          var files = dialog.getValue();
          console.log(files);
          new EdienilnoUploadManager(_this, _this.data.filename, files);
-         //var path = _this.data.filename + file.name;
-         //var uploader = new LargeFileUploader(path);
-         //uploader.uploadFile(file);
          dialog.dispose();
          _this.dom.tmp.actionDialog = null;
-         //_this.load(_this.data.filename);
       },
       cancelFn: function () {
          dialog.dispose();

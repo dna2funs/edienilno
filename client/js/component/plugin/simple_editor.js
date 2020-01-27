@@ -8,6 +8,108 @@ function basename(filename) {
    return filename.split('/').pop();
 }
 
+function hex(n) {
+   if (n < 10) return String.fromCharCode(n + 48);
+   return String.fromCharCode(n + 55);
+}
+
+function buildHex(ch, id, x, y) {
+   var a = ~~(ch/16), b = ch%16;
+   var group = document.createElement('span');
+   var H = document.createElement('span');
+   var L = document.createElement('span');
+   H.innerHTML = hex(a);
+   L.innerHTML = hex(b);
+   H.className = 'b0';
+   L.className = 'b0';
+   H.id = 'sebin-' + id + '-1';
+   L.id = 'sebin-' + id + '-2';
+   group.appendChild(H);
+   group.appendChild(L);
+   group.className = 'sebin';
+   group.style.top = y + 'px';
+   group.style.left = x + 'px';
+   return group;
+}
+
+function render_binary_data(_this, data, scrollTop) {
+   var sdiv = _this.dom.binSdiv || document.createElement('div');
+   if (!_this.dom.binSdiv) {
+      _this.dom.binSdiv = sdiv;
+      _this.dom.bin.appendChild(sdiv);
+   }
+   sdiv.innerHTML = '';
+   var group = buildHex(data[0]);
+   sdiv.appendChild(group);
+   var elemH = group.offsetHeight, elemW = group.offsetWidth + 5;
+   var cH = _this.dom.self.parentNode.offsetHeight, cW = _this.dom.self.parentNode.offsetWidth;
+   var lineN = ~~(cW / elemW);
+   if (lineN < 4) lineN = 4;
+   else if (lineN < 8) lineN = 4;
+   else if (lineN < 16) lineN = 8;
+   else if (lineN < 32) lineN = 16;
+   else if (lineN < 64) lineN = 32;
+   else lineN = 64;
+   var lineC = Math.ceil(data.length / lineN);
+   sdiv.style.width = (lineN * elemW + 10) + 'px';
+   sdiv.style.height = (lineC * elemH + 10) + 'px';
+   sdiv.innerHTML = '';
+
+   var curL = ~~(scrollTop / elemH);
+   var baseY = curL * elemH, offsetY = 0;
+   var curI = curL * lineN;
+   while (offsetY - elemH < cH) {
+      for (var i = 0, n = lineN; i < n; i++) {
+         var index = curI + i;
+         if (index >= data.length) break;
+         var group = buildHex(data[index], index, elemW * i, baseY + offsetY - scrollTop);
+         sdiv.appendChild(group);
+      }
+      curI += lineN;
+      offsetY += elemH;
+   }
+
+   if (_this.data.binSelected) {
+      var selected = document.getElementById(_this.data.binSelected);
+      if (selected) selected.classList.add('sebin-active');
+   }
+}
+
+function render_data(_this, data) {
+   if (data.indexOf('\0') >= 0) {
+      // binary file
+      _this.data.binary = true;
+      _this.dom.txt.style.display = 'none';
+      _this.dom.bin = document.createElement('div');
+      _this.dom.bin.style.width = '100%';
+      _this.dom.bin.style.height = '100%';
+      _this.dom.bin.style.overflowX = 'hidden';
+      _this.dom.bin.style.overflowY = 'auto';
+      _this.dom.bin.style.fontFamily = 'monospace';
+      _this.dom.self.appendChild(_this.dom.bin);
+      data = new TextEncoder("utf-8").encode(data);
+      _this.data.data = data;
+      render_binary_data(_this, data, 0);
+      _this.event.scrollSdiv = function (evt) {
+         render_binary_data(_this, data, evt.target.scrollTop);
+      };
+      _this.event.clickSdiv = function (evt) {
+         if (!evt.target.classList.contains('b0')) return;
+         if (_this.data.binSelected) {
+            var selected = document.getElementById(_this.data.binSelected);
+            if (selected) selected.classList.remove('sebin-active');
+         }
+         _this.data.binSelected = evt.target.getAttribute('id');
+         evt.target.classList.add('sebin-active');
+      };
+      _this.dom.bin.addEventListener('scroll', _this.event.scrollSdiv);
+      _this.dom.binSdiv.addEventListener('click', _this.event.clickSdiv);
+   } else {
+      _this.dom.txt.value = data;
+      _this.dom.txt.classList.remove('disabled');
+   }
+}
+
 function EdienilnoSimpleEditor(id, filename) {
    this.id = id;
    if (!filename) {
@@ -24,7 +126,8 @@ function EdienilnoSimpleEditor(id, filename) {
    };
    this.data = {
       filename: filename,
-      changed: false
+      changed: false,
+      binary: false
    };
 
    var _this = this;
@@ -73,8 +176,7 @@ function EdienilnoSimpleEditor(id, filename) {
       function (data) {
          if (!data) data = {};
          if (!data.data) data.data = '';
-         _this.dom.txt.value = data.data;
-         _this.dom.txt.classList.remove('disabled');
+         render_data(_this, data.data);
       }
    );
    div.style.width = '100%';
@@ -96,6 +198,9 @@ EdienilnoSimpleEditor.prototype = {
       return this.data.filename;
    },
    resize: function () {
+      if (this.data.binary) {
+         render_binary_data(this, this.data.data, this.dom.bin.scrollTop);
+      }
    },
    show: function () {
       if (!this.dom.self.parentNode) {
@@ -111,6 +216,11 @@ EdienilnoSimpleEditor.prototype = {
    },
    dispose: function () {
       if (!this.data || !this.data.filename) return;
+      if (this.dom.bin) {
+         this.dom.bin.removeEventListener('scroll', this.event.scrollSdiv);
+         this.dom.binSdiv.removeEventListener('click', this.event.clickSdiv);
+         if (this.data.binSelected) this.data.binSelected = null;
+      }
       this.dom.txt.removeEventListener('change', this.event.change.txt);
       this.dom.btnClose.removeEventListener('click', this.event.click.btnClose);
       system.bundle.view.getDom().removeChild(this.dom.self);

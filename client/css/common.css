@@ -121,3 +121,11 @@ a.xitem:hover {
 .xitem-gray-1 { background-color: #ddd; }
 .xitem-gray-2 { background-color: #aaa; }
 .xitem-gray-3 { background-color: #777; }
+
+.sebin {
+   position: absolute;
+}
+.sebin-active {
+   background-color: blue;
+   color: white;
+}

@@ -28,7 +28,10 @@ const api = {
                break;
             }
             system.storage.loadSmallFile(filename).then((data) => {
-               obj.data = data.toString();
+               obj.data = '';
+               for (let _i = 0, _n = data.length; _i < _n; _i++) {
+                  obj.data += String.fromCharCode(data[_i]);
+               }
                ws.send(JSON.stringify(obj));
             }, () => {
                obj.error = 'failed';

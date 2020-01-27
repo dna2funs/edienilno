@@ -8,6 +8,16 @@ function basename(filename) {
    return filename.split('/').pop();
 }
 
+function to_byte(arr) {
+   var n = arr.length;
+   var b = new Uint8Array(n);
+   for (var i = 0; i < n; i++) {
+      b[i] = arr.charCodeAt(i);
+   }
+   arr = null;
+   return b;
+}
+
 function hex(n) {
    if (n < 10) return String.fromCharCode(n + 48);
    return String.fromCharCode(n + 55);
@@ -87,7 +97,7 @@ function render_data(_this, data) {
       _this.dom.bin.style.overflowY = 'auto';
       _this.dom.bin.style.fontFamily = 'monospace';
       _this.dom.self.appendChild(_this.dom.bin);
-      data = new TextEncoder("utf-8").encode(data);
+      data = to_byte(data);
       _this.data.data = data;
       render_binary_data(_this, data, 0);
       _this.event.scrollSdiv = function (evt) {

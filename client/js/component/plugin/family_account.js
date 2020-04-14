@@ -123,6 +123,8 @@ EdienilnoFamilyAccountEditor.prototype = {
       div.innerHTML = 'Reset';
       this.dom.btnReset = div;
       this.dom.self.appendChild(div);
+      this.dom.self.style.overflowY = 'auto';
+      this.dom.self.style.height = '100%';
 
       var _this = this;
       this._api = {

@@ -162,8 +162,8 @@ function init_ui() {
    ui.iconnav.pushBottom('settings', './images/wifi-no-line.svg', function () {
       _controller.client.disconnect();
    });
-   _controller.pluginer.register('lab.dragAndDrop', './js/component/plugin/lab/dnd.js');
-   _controller.pluginer.open('@dnd', 'lab.dragAndDrop');
+   // _controller.pluginer.register('lab.dragAndDrop', './js/component/plugin/lab/dnd.js');
+   // _controller.pluginer.open('@dnd', 'lab.dragAndDrop');
 
    function waitForOnline(timeout, fn) {
       var timestamp = new Date().getTime();

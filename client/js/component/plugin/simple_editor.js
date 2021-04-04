@@ -52,7 +52,41 @@ function buildHex(ch, id, x, y) {
    return group;
 }
 
+function highlight_selected(_this) {
+   if (!_this.data.binSelected) return;
+   var selected = document.getElementById(_this.data.binSelected);
+   if (!selected) return;
+   selected.classList.add('sebin-active');
+   var view = selected.parentNode.parentNode;
+   var charHighlightDiv = view.querySelector('.ch-highlight');
+   if (!charHighlightDiv) {
+      charHighlightDiv = document.createElement('div');
+      charHighlightDiv.className = 'ch-highlight';
+      charHighlightDiv.style.position = 'absolute';
+      charHighlightDiv.style.opacity = 0.5;
+      charHighlightDiv.style.backgroundColor = 'yellow';
+      view.appendChild(charHighlightDiv);
+   }
+   var layout = _this.data.binaryLayout;
+   var id = selected.getAttribute('id');
+   var index = parseInt(id.split('-')[1]);
+   var lineno = ~~(index / layout.lineN);
+   var col = index % layout.lineN;
+   var top = layout.elemH * lineno - view.parentNode.scrollTop;
+   if (top < 0) {
+      view.removeChild(charHighlightDiv);
+      return;
+   }
+   charHighlightDiv.style.top = top + 'px';
+   // XXX: fix slight position shift
+   charHighlightDiv.style.left = (layout.elemW * (layout.lineN + 0.2) + col * selected.offsetWidth) + 'px';
+   charHighlightDiv.style.width = (layout.elemW/2) + 'px';
+   charHighlightDiv.style.height = layout.elemH + 'px';
+}
+
 function render_binary_data(_this, data, scrollTop) {
+   // XXX: render bug
+   //   - when scroll, the first line in the view should not be rendered on the top of nav bar
    var sdiv = _this.dom.binSdiv || document.createElement('div');
    if (!_this.dom.binSdiv) {
       _this.dom.binSdiv = sdiv;
@@ -62,8 +96,9 @@ function render_binary_data(_this, data, scrollTop) {
    var group = buildHex(data[0]);
    sdiv.appendChild(group);
    var elemH = group.offsetHeight, elemW = group.offsetWidth + 5;
+   // < hex view > | < char view> |-|
    var cH = _this.dom.self.parentNode.offsetHeight, cW = _this.dom.self.parentNode.offsetWidth;
-   var lineN = ~~(cW / elemW);
+   var lineN = ~~((cW - 0) * 2 / 3 / elemW);
    if (lineN < 4) lineN = 4;
    else if (lineN < 8) lineN = 4;
    else if (lineN < 16) lineN = 8;
@@ -85,14 +120,33 @@ function render_binary_data(_this, data, scrollTop) {
          var group = buildHex(data[index], index, elemW * i, baseY + offsetY - scrollTop);
          sdiv.appendChild(group);
       }
+      // show characters 32-127; 0-31,128- displayed as '.'
+      // TODO: move to a function
+      var charLineView = document.createElement('span');
+      for (var i = 0, n = lineN; i < n; i++) {
+         var index = curI + i;
+         if (index >= data.length) break;
+         var ch = data[index];
+         if (ch >= 32 && ch <= 127) {
+            charLineView.appendChild(document.createTextNode(String.fromCharCode(ch)));
+         } else {
+            charLineView.appendChild(document.createTextNode('.'));
+         }
+      }
+      charLineView.style.position = 'absolute';
+      charLineView.style.top = (baseY + offsetY - scrollTop) + 'px';
+      charLineView.style.left = (elemW * (lineN + 0.2)) + 'px';
+      sdiv.appendChild(charLineView);
       curI += lineN;
       offsetY += elemH;
    }
 
-   if (_this.data.binSelected) {
-      var selected = document.getElementById(_this.data.binSelected);
-      if (selected) selected.classList.add('sebin-active');
-   }
+   _this.data.binaryLayout = {
+      elemH: elemH,
+      elemW: elemW,
+      lineN: lineN
+   };
+   highlight_selected(_this);
 }
 
 function render_data(_this, data) {
@@ -120,7 +174,8 @@ function render_data(_this, data) {
             if (selected) selected.classList.remove('sebin-active');
          }
          _this.data.binSelected = evt.target.getAttribute('id');
-         evt.target.classList.add('sebin-active');
+         highlight_selected(_this);
+         // TODO: brush char view - highlight selected character
       };
       _this.event.keySdiv = function (evt) {
          if (!_this.data.binary) return;
@@ -161,6 +216,9 @@ function render_data(_this, data) {
             id ++;
             if (selected) selected.innerHTML = hex(keycode);
          }
+         // TODO: after modify data, apply to char view as well
+         //    - find next char view (for current line)
+         //    - update char view in the whole line
          nextId = nextId.join('-');
          if (_this.data.data.length > id) {
             if (selected) selected.classList.remove('sebin-active');

@@ -147,6 +147,6 @@ EdienilnoWsClient.prototype = {
 };
 
 if (!window.edienilno) window.edienilno = {};
-window.edienilno.WwbsocketClient = EdienilnoWsClient;
+window.edienilno.WebsocketClient = EdienilnoWsClient;
 
 })();

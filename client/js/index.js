@@ -9,6 +9,7 @@
 //@include component/client.js
 
 var ui = {
+   normalOffline: false,
    loading: dom('#p_loading'),
    app: dom('#p_app'),
    view: dom('#p_view')
@@ -128,16 +129,28 @@ function init_ui() {
    ui.titlenav.dom.menu.dom.self.style.height = '200px';
    ui.titlenav.switchTab('untitled');
 
-   _controller.client = new edienilno.WwbsocketClient('/ws');
+   _controller.client = new edienilno.WebsocketClient('/ws');
    _controller.client.onOnline(function () {
       console.log('online');
       _controller._online = true;
+      ui.normalOffline = false;
       ui.icon.disconnect.check();
    });
    _controller.client.onOffline(function () {
       console.log('offline');
       _controller._online = false;
       ui.icon.disconnect.uncheck();
+      if (!ui.normalOffline) {
+         var alertD = new edienilno.YesNoCancelBox({
+            titleText: 'System Error',
+            bodyText: 'Disconnected to remote server.',
+            yesTitle: 'OK',
+            yesFn: function () {
+               alertD.dispose();
+            }
+         });
+         alertD.act();
+      }
    });
 
    _controller.pluginer = new edienilno.PluginManager({
@@ -160,6 +173,7 @@ function init_ui() {
 
    // for debug only
    ui.iconnav.pushBottom('settings', './images/wifi-no-line.svg', function () {
+      ui.normalOffline = true;
       _controller.client.disconnect();
    });
    // _controller.pluginer.register('lab.dragAndDrop', './js/component/plugin/lab/dnd.js');

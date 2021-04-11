@@ -37,12 +37,15 @@ window.require.config({ paths: {
          return true;
       },
       _buildReference: function (model) {
+         /*
          var lifecycle = require('vs/base/common/lifecycle');
          var ref = new lifecycle.ImmortalReference({ textEditorModel: model });
          return {
             object: ref.object,
             dispose: function () { ref.dispose(); }
          };
+         */
+         return model;
       },
       getModel: function (uri) {
          var _this = this;
